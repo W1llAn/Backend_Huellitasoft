@@ -1,7 +1,7 @@
 package huellitassoft_web.huellitasoft.controller;
 
-import huellitassoft_web.huellitasoft.dto.UserRequestDTO;
-import huellitassoft_web.huellitasoft.dto.UserResponseDTO;
+import huellitassoft_web.huellitasoft.dto.user.UserCreateDTO;
+import huellitassoft_web.huellitasoft.dto.user.UserResponseDTO;
 import huellitassoft_web.huellitasoft.enums.UserRol;
 import huellitassoft_web.huellitasoft.enums.UserState;
 import huellitassoft_web.huellitasoft.service.UserService;
@@ -160,7 +160,7 @@ public class UserController {
             @ApiResponse(responseCode = "400", description = "Datos de entrada inválidos"),
             @ApiResponse(responseCode = "409", description = "El email o usuario ya existe")
     })
-    public ResponseEntity<UserResponseDTO> createUser(@Valid @RequestBody UserRequestDTO createDTO) {
+    public ResponseEntity<UserResponseDTO> createUser(@Valid @RequestBody UserCreateDTO createDTO) {
         log.info("POST /api/users - Creando nuevo usuario con email: {} y usuario: {}", createDTO.getEmail(), createDTO.getUsername());
         UserResponseDTO user = userService.createUser(createDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(user);
@@ -184,7 +184,7 @@ public class UserController {
             @ApiResponse(responseCode = "409", description = "El email o usuario ya existe"),
             @ApiResponse(responseCode = "401", description = "No autenticado")
     })
-    public ResponseEntity<UserResponseDTO> updateUser(@PathVariable Integer idUsuario, @Valid @RequestBody UserRequestDTO updateDTO) {
+    public ResponseEntity<UserResponseDTO> updateUser(@PathVariable Integer idUsuario, @Valid @RequestBody UserCreateDTO updateDTO) {
         log.info("PUT /api/users/{} - Actualizando usuario", idUsuario);
         UserResponseDTO user = userService.updateUser(idUsuario, updateDTO);
         return ResponseEntity.ok(user);

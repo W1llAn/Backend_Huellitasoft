@@ -1,4 +1,4 @@
-package huellitassoft_web.huellitasoft.dto;
+package huellitassoft_web.huellitasoft.dto.user;
 
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
@@ -17,7 +17,7 @@ import huellitassoft_web.huellitasoft.enums.UserState;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserRequestDTO {
+public class UserCreateDTO {
 
     @NotBlank(message = "El email es requerido")
     @Email(message = "El email debe ser válido")

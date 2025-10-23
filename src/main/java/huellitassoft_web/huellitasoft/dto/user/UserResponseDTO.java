@@ -1,4 +1,4 @@
-package huellitassoft_web.huellitasoft.dto;
+package huellitassoft_web.huellitasoft.dto.user;
 
 import huellitassoft_web.huellitasoft.enums.UserRol;
 import huellitassoft_web.huellitasoft.enums.UserState;
