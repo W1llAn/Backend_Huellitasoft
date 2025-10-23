@@ -10,7 +10,6 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtGra
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.stream.Stream;
 
 /**
  * Convertidor personalizado de JWT a Authentication.
@@ -20,7 +19,6 @@ import java.util.stream.Stream;
 public class CustomJwtAuthenticationConverter extends JwtAuthenticationConverter {
 
     private static final String ROLES_CLAIM = "https://huellitasoft/roles";
-    private static final String ROLE_PREFIX = "ROLE_";
 
     public CustomJwtAuthenticationConverter() {
         super();
@@ -38,22 +36,18 @@ public class CustomJwtAuthenticationConverter extends JwtAuthenticationConverter
         @Override
         public Collection<GrantedAuthority> convert(Jwt jwt) {
             // Obtener las autoridades por defecto (scopes)
-            Collection<GrantedAuthority> authorities = defaultConverter.convert(jwt);
+            Collection<GrantedAuthority> authorities = new ArrayList<>(defaultConverter.convert(jwt));
             
             // Agregar roles personalizados
             List<GrantedAuthority> customAuthorities = extractAuthorities(jwt);
+            authorities.addAll(customAuthorities);
             
-            // Combinar ambas colecciones
-            if (authorities != null) {
-                return Stream.concat(authorities.stream(), customAuthorities.stream())
-                        .toList();
-            }
-            
-            return customAuthorities;
+            return authorities;
         }
 
         /**
          * Extrae los roles del claim personalizado del JWT.
+         * Los roles ya vienen con el prefijo "ROLE_" en el JWT de Auth0.
          *
          * @param jwt el token JWT
          * @return lista de GrantedAuthority basada en los roles
@@ -64,9 +58,15 @@ public class CustomJwtAuthenticationConverter extends JwtAuthenticationConverter
             // Obtener los roles del claim personalizado
             List<String> roles = jwt.getClaimAsStringList(ROLES_CLAIM);
             
-            if (roles != null) {
+            if (roles != null && !roles.isEmpty()) {
                 for (String role : roles) {
-                    authorities.add(new SimpleGrantedAuthority(ROLE_PREFIX + role.toUpperCase()));
+                    // Los roles de Auth0 ya vienen con ROLE_ prefix
+                    // Si no lo tienen, lo agregamos
+                    if (role.startsWith("ROLE_")) {
+                        authorities.add(new SimpleGrantedAuthority(role));
+                    } else {
+                        authorities.add(new SimpleGrantedAuthority("ROLE_" + role.toUpperCase()));
+                    }
                 }
             }
             
