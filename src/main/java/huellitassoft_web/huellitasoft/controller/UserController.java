@@ -40,18 +40,18 @@ public class UserController {
 
     /**
      * Obtiene todos los usuarios.
-     * Solo accesible para administradores.
+     * Solo accesible para administradores (ADMINISTRADOR o ADMINISTRADOR_VETERINARIA).
      *
      * @return lista de todos los usuarios
      */
     @GetMapping
-    @PreAuthorize("hasRole('ADMINISTRADOR')")
+    @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'ADMINISTRADOR_VETERINARIA')")
     @SecurityRequirement(name = "Bearer Authentication")
     @Operation(summary = "Obtener todos los usuarios", description = "Obtiene la lista completa de usuarios. Solo disponible para administradores.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Lista de usuarios obtenida exitosamente",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = UserResponseDTO.class))),
-            @ApiResponse(responseCode = "403", description = "Acceso denegado. Se requiere rol ADMINISTRADOR"),
+            @ApiResponse(responseCode = "403", description = "Acceso denegado. Se requiere rol ADMINISTRADOR o ADMINISTRADOR_VETERINARIA"),
             @ApiResponse(responseCode = "401", description = "No autenticado")
     })
     public ResponseEntity<List<UserResponseDTO>> getAllUsers() {
@@ -125,13 +125,13 @@ public class UserController {
 
     /**
      * Obtiene todos los usuarios con un rol específico.
-     * Solo accesible para administradores.
+     * Solo accesible para administradores (ADMINISTRADOR o ADMINISTRADOR_VETERINARIA).
      *
      * @param rol el rol a filtrar
      * @return lista de usuarios con el rol especificado
      */
     @GetMapping("/role/{rol}")
-    @PreAuthorize("hasRole('ADMINISTRADOR')")
+    @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'ADMINISTRADOR_VETERINARIA')")
     @SecurityRequirement(name = "Bearer Authentication")
     @Operation(summary = "Obtener usuarios por rol", description = "Obtiene todos los usuarios con un rol específico. Solo disponible para administradores.")
     @ApiResponses(value = {
@@ -192,13 +192,14 @@ public class UserController {
 
     /**
      * Cambia el estado de un usuario.
+     * Solo accesible para administradores (ADMINISTRADOR o ADMINISTRADOR_VETERINARIA).
      *
      * @param idUsuario el ID del usuario
      * @param nuevoEstado el nuevo estado del usuario
      * @return el usuario con estado actualizado
      */
     @PatchMapping("/{idUsuario}/state")
-    @PreAuthorize("hasRole('ADMINISTRADOR')")
+    @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'ADMINISTRADOR_VETERINARIA')")
     @SecurityRequirement(name = "Bearer Authentication")
     @Operation(summary = "Cambiar estado del usuario", description = "Cambia el estado (activo, inactivo, etc.) de un usuario. Solo disponible para administradores.")
     @ApiResponses(value = {
@@ -218,13 +219,13 @@ public class UserController {
 
     /**
      * Elimina un usuario.
-     * Solo accesible para administradores.
+     * Solo accesible para administradores (ADMINISTRADOR o ADMINISTRADOR_VETERINARIA).
      *
      * @param idUsuario el ID del usuario a eliminar
      * @return respuesta sin contenido
      */
     @DeleteMapping("/{idUsuario}")
-    @PreAuthorize("hasRole('ADMINISTRADOR')")
+    @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'ADMINISTRADOR_VETERINARIA')")
     @SecurityRequirement(name = "Bearer Authentication")
     @Operation(summary = "Eliminar usuario", description = "Elimina un usuario del sistema. Solo disponible para administradores.")
     @ApiResponses(value = {
