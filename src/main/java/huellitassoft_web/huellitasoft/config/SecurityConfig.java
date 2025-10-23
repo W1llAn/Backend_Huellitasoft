@@ -30,8 +30,8 @@ public class SecurityConfig {
 
     private static final String USERS_ENDPOINT = "/api/users";
     private static final String USERS_WILDCARD = "/api/users/**";
-    private static final String ROLE_ADMIN_VET = "ADMINISTRADOR_VETERINARIA";
     private static final String ROLE_ADMIN = "ADMINISTRADOR";
+    private static final String ROLE_ADMIN_VET = "ADMINISTRADOR_VETERINARIA";
 
     @Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri}")
     private String issuerUri;
@@ -69,10 +69,10 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT, USERS_WILDCARD).authenticated()
                         .requestMatchers(HttpMethod.PATCH, USERS_WILDCARD).authenticated()
                         
-                        // Endpoints restringidos a administradores
-                        .requestMatchers(HttpMethod.GET, USERS_ENDPOINT).hasRole(ROLE_ADMIN_VET)
-                        .requestMatchers(HttpMethod.GET, USERS_ENDPOINT + "/role/**").hasRole(ROLE_ADMIN_VET)
-                        .requestMatchers(HttpMethod.DELETE, USERS_WILDCARD).hasRole(ROLE_ADMIN_VET)
+                        // Endpoints restringidos a administradores (ADMINISTRADOR o ADMINISTRADOR_VETERINARIA)
+                        .requestMatchers(HttpMethod.GET, USERS_ENDPOINT).hasAnyRole(ROLE_ADMIN, ROLE_ADMIN_VET)
+                        .requestMatchers(HttpMethod.GET, USERS_ENDPOINT + "/role/**").hasAnyRole(ROLE_ADMIN, ROLE_ADMIN_VET)
+                        .requestMatchers(HttpMethod.DELETE, USERS_WILDCARD).hasAnyRole(ROLE_ADMIN, ROLE_ADMIN_VET)
                         
                         // Todos los demás requieren autenticación
                         .anyRequest().authenticated()
