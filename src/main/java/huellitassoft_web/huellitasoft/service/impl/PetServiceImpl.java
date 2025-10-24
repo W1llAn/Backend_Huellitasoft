@@ -38,8 +38,8 @@ public class PetServiceImpl implements PetService {
                 .estado(pet.getEstado())
                 .idCliente(pet.getCliente().getIdCliente())
                 .idRaza(pet.getRaza().getIdRaza())
-                .cliente(pet.getCliente())
-                .raza(pet.getRaza())
+                .nombreCliente(pet.getCliente().getNombres()+" "+pet.getCliente().getApellidos())
+                .nombreRaza(pet.getRaza().getNombre())
                 .build();
     }
 
