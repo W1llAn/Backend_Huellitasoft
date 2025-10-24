@@ -36,6 +36,8 @@ public class SecurityConfig {
     private static final String ESPECIES_WILDCARD = "/api/especies/**";
     private static final String MASCOTAS_ENDPOINT = "/api/mascotas";
     private static final String MASCOTAS_WILDCARD = "/api/mascotas/**";
+    private static final String CLIENTES_ENDPOINT = "/api/clientes";
+    private static final String CLIENTES_WILDCARD = "/api/clientes/**";
     private static final String ROLE_ADMIN = "ADMINISTRADOR";
     private static final String ROLE_ADMIN_VET = "ADMINISTRADOR_VETERINARIA";
     private static final String ROLE_VETERINARIO = "VETERINARIO";
@@ -94,6 +96,15 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, MASCOTAS_ENDPOINT).hasAnyRole(ROLE_VETERINARIO, ROLE_ADMIN, ROLE_ADMIN_VET)
                         .requestMatchers(HttpMethod.PUT, MASCOTAS_WILDCARD).hasAnyRole(ROLE_VETERINARIO, ROLE_ADMIN, ROLE_ADMIN_VET)
                         .requestMatchers(HttpMethod.DELETE, MASCOTAS_WILDCARD).hasAnyRole(ROLE_VETERINARIO, ROLE_ADMIN, ROLE_ADMIN_VET)
+
+                        // Endpoints de CLIENTES - GET permitido para autenticados
+                        .requestMatchers(HttpMethod.GET, CLIENTES_ENDPOINT).authenticated()
+                        .requestMatchers(HttpMethod.GET, CLIENTES_WILDCARD).authenticated()
+                        // POST, PUT, PATCH, DELETE solo para no-clientes (VETERINARIO, ADMINISTRADOR, ADMINISTRADOR_VETERINARIA)
+                        .requestMatchers(HttpMethod.POST, CLIENTES_ENDPOINT).hasAnyRole(ROLE_VETERINARIO, ROLE_ADMIN, ROLE_ADMIN_VET)
+                        .requestMatchers(HttpMethod.PUT, CLIENTES_WILDCARD).hasAnyRole(ROLE_VETERINARIO, ROLE_ADMIN, ROLE_ADMIN_VET)
+                        .requestMatchers(HttpMethod.PATCH, CLIENTES_WILDCARD).hasAnyRole(ROLE_VETERINARIO, ROLE_ADMIN, ROLE_ADMIN_VET)
+                        .requestMatchers(HttpMethod.DELETE, CLIENTES_WILDCARD).hasAnyRole(ROLE_VETERINARIO, ROLE_ADMIN, ROLE_ADMIN_VET)
 
                         // Endpoints protegidos - requieren autenticación
                         .requestMatchers(HttpMethod.GET, USERS_WILDCARD).authenticated()
