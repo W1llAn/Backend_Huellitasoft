@@ -34,6 +34,8 @@ public class SecurityConfig {
     private static final String RAZAS_WILDCARD = "/api/razas/**";
     private static final String ESPECIES_ENDPOINT = "/api/especies";
     private static final String ESPECIES_WILDCARD = "/api/especies/**";
+    private static final String MASCOTAS_ENDPOINT = "/api/mascotas";
+    private static final String MASCOTAS_WILDCARD = "/api/mascotas/**";
     private static final String ROLE_ADMIN = "ADMINISTRADOR";
     private static final String ROLE_ADMIN_VET = "ADMINISTRADOR_VETERINARIA";
     private static final String ROLE_VETERINARIO = "VETERINARIO";
@@ -84,7 +86,15 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, ESPECIES_ENDPOINT).hasAnyRole(ROLE_VETERINARIO, ROLE_ADMIN, ROLE_ADMIN_VET)
                         .requestMatchers(HttpMethod.PUT, ESPECIES_WILDCARD).hasAnyRole(ROLE_VETERINARIO, ROLE_ADMIN, ROLE_ADMIN_VET)
                         .requestMatchers(HttpMethod.DELETE, ESPECIES_WILDCARD).hasAnyRole(ROLE_VETERINARIO, ROLE_ADMIN, ROLE_ADMIN_VET)
-                        
+
+                        // Endpoints de MASCOTAS - GET permitido para autenticados
+                        .requestMatchers(HttpMethod.GET, MASCOTAS_ENDPOINT).authenticated()
+                        .requestMatchers(HttpMethod.GET, MASCOTAS_WILDCARD).authenticated()
+                        // POST, PUT, DELETE solo para no-clientes (VETERINARIO, ADMINISTRADOR, ADMINISTRADOR_VETERINARIA)
+                        .requestMatchers(HttpMethod.POST, MASCOTAS_ENDPOINT).hasAnyRole(ROLE_VETERINARIO, ROLE_ADMIN, ROLE_ADMIN_VET)
+                        .requestMatchers(HttpMethod.PUT, MASCOTAS_WILDCARD).hasAnyRole(ROLE_VETERINARIO, ROLE_ADMIN, ROLE_ADMIN_VET)
+                        .requestMatchers(HttpMethod.DELETE, MASCOTAS_WILDCARD).hasAnyRole(ROLE_VETERINARIO, ROLE_ADMIN, ROLE_ADMIN_VET)
+
                         // Endpoints protegidos - requieren autenticación
                         .requestMatchers(HttpMethod.GET, USERS_WILDCARD).authenticated()
                         .requestMatchers(HttpMethod.PUT, USERS_WILDCARD).authenticated()
