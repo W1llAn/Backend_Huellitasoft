@@ -30,8 +30,13 @@ public class SecurityConfig {
 
     private static final String USERS_ENDPOINT = "/api/users";
     private static final String USERS_WILDCARD = "/api/users/**";
+    private static final String RAZAS_ENDPOINT = "/api/razas";
+    private static final String RAZAS_WILDCARD = "/api/razas/**";
+    private static final String ESPECIES_ENDPOINT = "/api/especies";
+    private static final String ESPECIES_WILDCARD = "/api/especies/**";
     private static final String ROLE_ADMIN = "ADMINISTRADOR";
     private static final String ROLE_ADMIN_VET = "ADMINISTRADOR_VETERINARIA";
+    private static final String ROLE_VETERINARIO = "VETERINARIO";
 
     @Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri}")
     private String issuerUri;
@@ -63,6 +68,22 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, USERS_ENDPOINT + "/register-from-auth0").permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
                         .requestMatchers("/actuator/**").permitAll()
+                        
+                        // Endpoints de RAZAS - GET permitido para autenticados
+                        .requestMatchers(HttpMethod.GET, RAZAS_ENDPOINT).authenticated()
+                        .requestMatchers(HttpMethod.GET, RAZAS_WILDCARD).authenticated()
+                        // POST, PUT, DELETE solo para no-clientes (VETERINARIO, ADMINISTRADOR, ADMINISTRADOR_VETERINARIA)
+                        .requestMatchers(HttpMethod.POST, RAZAS_ENDPOINT).hasAnyRole(ROLE_VETERINARIO, ROLE_ADMIN, ROLE_ADMIN_VET)
+                        .requestMatchers(HttpMethod.PUT, RAZAS_WILDCARD).hasAnyRole(ROLE_VETERINARIO, ROLE_ADMIN, ROLE_ADMIN_VET)
+                        .requestMatchers(HttpMethod.DELETE, RAZAS_WILDCARD).hasAnyRole(ROLE_VETERINARIO, ROLE_ADMIN, ROLE_ADMIN_VET)
+                        
+                        // Endpoints de ESPECIES - GET permitido para autenticados
+                        .requestMatchers(HttpMethod.GET, ESPECIES_ENDPOINT).authenticated()
+                        .requestMatchers(HttpMethod.GET, ESPECIES_WILDCARD).authenticated()
+                        // POST, PUT, DELETE solo para no-clientes (VETERINARIO, ADMINISTRADOR, ADMINISTRADOR_VETERINARIA)
+                        .requestMatchers(HttpMethod.POST, ESPECIES_ENDPOINT).hasAnyRole(ROLE_VETERINARIO, ROLE_ADMIN, ROLE_ADMIN_VET)
+                        .requestMatchers(HttpMethod.PUT, ESPECIES_WILDCARD).hasAnyRole(ROLE_VETERINARIO, ROLE_ADMIN, ROLE_ADMIN_VET)
+                        .requestMatchers(HttpMethod.DELETE, ESPECIES_WILDCARD).hasAnyRole(ROLE_VETERINARIO, ROLE_ADMIN, ROLE_ADMIN_VET)
                         
                         // Endpoints protegidos - requieren autenticación
                         .requestMatchers(HttpMethod.GET, USERS_WILDCARD).authenticated()
