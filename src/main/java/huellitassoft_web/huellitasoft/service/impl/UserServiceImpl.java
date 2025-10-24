@@ -1,7 +1,7 @@
 package huellitassoft_web.huellitasoft.service.impl;
 
-import huellitassoft_web.huellitasoft.dto.UserRequestDTO;
-import huellitassoft_web.huellitasoft.dto.UserResponseDTO;
+import huellitassoft_web.huellitasoft.dto.user.UserCreateDTO;
+import huellitassoft_web.huellitasoft.dto.user.UserResponseDTO;
 import huellitassoft_web.huellitasoft.entity.User;
 import huellitassoft_web.huellitasoft.enums.UserRol;
 import huellitassoft_web.huellitasoft.enums.UserState;
@@ -123,7 +123,7 @@ public class UserServiceImpl implements UserService {
      * @throws ResourceAlreadyExistsException si el email o usuario ya existe
      */
     @Override
-    public UserResponseDTO createUser(UserRequestDTO createDTO) {
+    public UserResponseDTO createUser(UserCreateDTO createDTO) {
         log.info("Creando nuevo usuario con email: {} y usuario: {}", createDTO.getEmail(), createDTO.getUsername());
 
         // Verificar que el email no exista
@@ -161,7 +161,7 @@ public class UserServiceImpl implements UserService {
      * @throws ResourceAlreadyExistsException si el email o usuario ya existe en otro usuario
      */
     @Override
-    public UserResponseDTO updateUser(Integer idUsuario, UserRequestDTO updateDTO) {
+    public UserResponseDTO updateUser(Integer idUsuario, UserCreateDTO updateDTO) {
         log.info("Actualizando usuario con ID: {}", idUsuario);
 
         User user = userRepository.findById(idUsuario)
