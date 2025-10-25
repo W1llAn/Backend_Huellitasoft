@@ -3,10 +3,13 @@ package huellitassoft_web.huellitasoft.service.impl;
 import huellitassoft_web.huellitasoft.dto.client.ClientCreateDTO;
 import huellitassoft_web.huellitasoft.dto.client.ClientResponseDTO;
 import huellitassoft_web.huellitasoft.entity.Client;
+import huellitassoft_web.huellitasoft.entity.User;
 import huellitassoft_web.huellitasoft.enums.ClientState;
+import huellitassoft_web.huellitasoft.enums.UserRol;
 import huellitassoft_web.huellitasoft.exception.ResourceAlreadyExistsException;
 import huellitassoft_web.huellitasoft.exception.ResourceNotFoundException;
 import huellitassoft_web.huellitasoft.repository.ClientRepository;
+import huellitassoft_web.huellitasoft.repository.UserRepository;
 import huellitassoft_web.huellitasoft.service.ClientService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,10 +34,14 @@ import java.util.List;
 public class ClientServiceImpl implements ClientService {
 
     private final ClientRepository clientRepository;
+    private final UserRepository userRepository;
 
     private static final String CLIENT_NOT_FOUND = "Cliente con ID %d no encontrado";
+    private static final String USUARIO_NOT_FOUND = "Usuario con ID %d no encontrado";
+    private static final String USUARIO_NOT_CLIENT = "El usuario con ID %d no tiene rol de CLIENTE";
     private static final String DOCUMENTO_DUPLICADO = "Ya existe un cliente con el documento: %s";
     private static final String EMAIL_DUPLICADO = "Ya existe un cliente con el email: %s";
+    private static final String USUARIO_YA_EXISTE_CLIENTE = "Ya existe un cliente asociado al usuario con ID %d";
 
     @Override
     @Transactional(readOnly = true)
@@ -84,6 +91,18 @@ public class ClientServiceImpl implements ClientService {
 
     @Override
     @Transactional(readOnly = true)
+    public ClientResponseDTO getClientByUsuarioId(Integer idUsuario) {
+        log.info("Obteniendo cliente por ID de usuario: {}", idUsuario);
+        Client client = clientRepository.findByUsuario_IdUsuario(idUsuario)
+                .orElseThrow(() -> {
+                    log.error("Cliente asociado al usuario con ID {} no encontrado", idUsuario);
+                    return new ResourceNotFoundException("No existe cliente asociado al usuario con ID " + idUsuario);
+                });
+        return mapToResponseDTO(client);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<ClientResponseDTO> getClientsByEstado(ClientState estado) {
         log.info("Obteniendo clientes con estado: {}", estado);
         return clientRepository.findByEstado(estado)
@@ -116,6 +135,25 @@ public class ClientServiceImpl implements ClientService {
     public ClientResponseDTO createClient(ClientCreateDTO clientCreateDTO) {
         log.info("Creando nuevo cliente con documento: {}", clientCreateDTO.getDocumentoIdentidad());
 
+        // Validar que el usuario exista
+        User usuario = userRepository.findById(clientCreateDTO.getIdUsuario())
+                .orElseThrow(() -> {
+                    log.error(USUARIO_NOT_FOUND, clientCreateDTO.getIdUsuario());
+                    return new ResourceNotFoundException(String.format(USUARIO_NOT_FOUND, clientCreateDTO.getIdUsuario()));
+                });
+
+        // Validar que el usuario tenga rol CLIENTE
+        if (!usuario.getRol().equals(UserRol.ROLE_CLIENTE)) {
+            log.warn(USUARIO_NOT_CLIENT, clientCreateDTO.getIdUsuario());
+            throw new ResourceAlreadyExistsException(String.format(USUARIO_NOT_CLIENT, clientCreateDTO.getIdUsuario()));
+        }
+
+        // Validar que no exista un cliente asociado a este usuario
+        if (clientRepository.existsByUsuario_IdUsuario(clientCreateDTO.getIdUsuario())) {
+            log.warn(USUARIO_YA_EXISTE_CLIENTE, clientCreateDTO.getIdUsuario());
+            throw new ResourceAlreadyExistsException(String.format(USUARIO_YA_EXISTE_CLIENTE, clientCreateDTO.getIdUsuario()));
+        }
+
         // Validar que no exista cliente con el mismo documento
         if (clientRepository.existsByDocumentoIdentidad(clientCreateDTO.getDocumentoIdentidad())) {
             log.warn("Intento de crear cliente con documento duplicado: {}", clientCreateDTO.getDocumentoIdentidad());
@@ -137,6 +175,7 @@ public class ClientServiceImpl implements ClientService {
                 .telefono(clientCreateDTO.getTelefono())
                 .direccion(clientCreateDTO.getDireccion())
                 .estado(ClientState.ACTIVO)
+                .usuario(usuario)
                 .build();
 
         Client savedClient = clientRepository.save(client);
@@ -154,6 +193,27 @@ public class ClientServiceImpl implements ClientService {
                     log.error(CLIENT_NOT_FOUND, idCliente);
                     return new ResourceNotFoundException(String.format(CLIENT_NOT_FOUND, idCliente));
                 });
+
+        // Si el ID del usuario cambió, validar que el nuevo usuario exista y sea CLIENTE
+        if (!client.getUsuario().getIdUsuario().equals(clientCreateDTO.getIdUsuario())) {
+            User nuevoUsuario = userRepository.findById(clientCreateDTO.getIdUsuario())
+                    .orElseThrow(() -> {
+                        log.error(USUARIO_NOT_FOUND, clientCreateDTO.getIdUsuario());
+                        return new ResourceNotFoundException(String.format(USUARIO_NOT_FOUND, clientCreateDTO.getIdUsuario()));
+                    });
+
+            if (!nuevoUsuario.getRol().equals(UserRol.ROLE_CLIENTE)) {
+                log.warn(USUARIO_NOT_CLIENT, clientCreateDTO.getIdUsuario());
+                throw new ResourceAlreadyExistsException(String.format(USUARIO_NOT_CLIENT, clientCreateDTO.getIdUsuario()));
+            }
+
+            if (clientRepository.existsByUsuario_IdUsuario(clientCreateDTO.getIdUsuario())) {
+                log.warn(USUARIO_YA_EXISTE_CLIENTE, clientCreateDTO.getIdUsuario());
+                throw new ResourceAlreadyExistsException(String.format(USUARIO_YA_EXISTE_CLIENTE, clientCreateDTO.getIdUsuario()));
+            }
+
+            client.setUsuario(nuevoUsuario);
+        }
 
         // Validar documento si cambió
         if (!client.getDocumentoIdentidad().equals(clientCreateDTO.getDocumentoIdentidad())) {
@@ -231,6 +291,7 @@ public class ClientServiceImpl implements ClientService {
                 .telefono(client.getTelefono())
                 .direccion(client.getDireccion())
                 .estado(client.getEstado())
+                .idUsuario(client.getUsuario().getIdUsuario())
                 .build();
     }
 }
