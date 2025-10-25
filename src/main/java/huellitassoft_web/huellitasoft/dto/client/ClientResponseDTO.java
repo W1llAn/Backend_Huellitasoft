@@ -75,5 +75,5 @@ public class ClientResponseDTO {
             description = "ID del usuario asociado al cliente",
             example = "5"
     )
-    private Integer idUsuario;
+    private Long idUsuario;
 }

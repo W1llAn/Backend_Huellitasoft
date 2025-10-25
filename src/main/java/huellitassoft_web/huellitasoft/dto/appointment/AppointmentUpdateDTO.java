@@ -26,4 +26,7 @@ public class AppointmentUpdateDTO {
     @Size(max = 255, message = "El motivo no puede superar los 255 caracteres")
     @Schema(description = "Motivo actualizado de la cita", example = "Cambio de hora de consulta")
     private String motivo;
+
+    @Schema(description = "Nuevo ID del veterinario (opcional)", example = "2")
+    private Long idUsuario;
 }

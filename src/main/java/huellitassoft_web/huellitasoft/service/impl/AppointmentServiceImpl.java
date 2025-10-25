@@ -41,7 +41,11 @@ public class AppointmentServiceImpl implements AppointmentService {
         // Validar existencia de usuario (solo veterinario o administrador veterinaria)
         User usuario = userRepository.findById(dto.getIdUsuario())
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con ID: " + dto.getIdUsuario()));
-
+        if (!mascota.getCliente().getIdCliente().equals(cliente.getIdCliente())) {
+            throw new IllegalArgumentException(
+                    String.format("La mascota con ID %d no pertenece al cliente con ID %d",
+                            dto.getIdMascota(), dto.getIdCliente()));
+        }
         if (!(usuario.getRol() == UserRol.ROLE_VETERINARIO ||
                 usuario.getRol() == UserRol.ROLE_ADMINISTRADOR_VETERINARIA)) {
             throw new IllegalArgumentException("Solo los usuarios con rol VETERINARIO o ADMINISTRADOR_VETERINARIA pueden tener citas asignadas.");
@@ -84,35 +88,66 @@ public class AppointmentServiceImpl implements AppointmentService {
 
     @Override
     public AppointmentResponseDTO update(Long idCita, AppointmentUpdateDTO dto) {
+        // 🔹 1. Buscar la cita
         Appointment cita = appointmentRepository.findById(idCita)
                 .orElseThrow(() -> new ResourceNotFoundException("Cita no encontrada con ID: " + idCita));
 
-        if (dto.getFechaHora() != null) {
-            // Validar que no haya conflicto con el mismo veterinario
-            boolean conflictVet = appointmentRepository
-                    .existsByUsuarioIdUsuarioAndFechaHora(cita.getUsuario().getIdUsuario(), dto.getFechaHora());
-            if (conflictVet && !dto.getFechaHora().equals(cita.getFechaHora())) {
-                throw new IllegalArgumentException("El veterinario ya tiene otra cita en esa fecha y hora.");
+        // 🔹 2. Validar estado actual
+        if (cita.getEstado() == EstadoCita.ATENDIDA) {
+            throw new IllegalArgumentException("No se puede modificar una cita que ya está " + cita.getEstado());
+        }
+
+        // 🔹 3. Validar si se intenta cambiar usuario (veterinario)
+        if (dto.getIdUsuario() != null && !dto.getIdUsuario().equals(cita.getUsuario().getIdUsuario())) {
+            User nuevoUsuario = userRepository.findById(dto.getIdUsuario())
+                    .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con ID: " + dto.getIdUsuario()));
+
+            if (!(nuevoUsuario.getRol().equals(UserRol.ROLE_VETERINARIO) ||
+                    nuevoUsuario.getRol().equals(UserRol.ROLE_ADMINISTRADOR_VETERINARIA))) {
+                throw new IllegalArgumentException("Solo usuarios con rol VETERINARIO o ADMINISTRADOR_VETERINARIA pueden asignarse a citas.");
             }
 
-            // Validar que la mascota no tenga otra cita en ese horario
-            boolean conflictPet = appointmentRepository
-                    .existsByMascotaIdMascotaAndFechaHora(cita.getMascota().getIdMascota(), dto.getFechaHora());
-            if (conflictPet && !dto.getFechaHora().equals(cita.getFechaHora())) {
-                throw new IllegalArgumentException("La mascota ya tiene otra cita en esa fecha y hora.");
+            // Validar disponibilidad del nuevo veterinario
+            if (dto.getFechaHora() != null) {
+                boolean existeCita = appointmentRepository.existsByUsuarioIdUsuarioAndFechaHora(nuevoUsuario.getIdUsuario(), dto.getFechaHora());
+                if (existeCita) {
+                    throw new IllegalArgumentException("El veterinario ya tiene una cita en la nueva fecha y hora indicada.");
+                }
+            }
+
+            cita.setUsuario(nuevoUsuario);
+        }
+
+        // 🔹 4. Validar cambio de fecha/hora
+        if (dto.getFechaHora() != null && !dto.getFechaHora().equals(cita.getFechaHora())) {
+            if (dto.getFechaHora().isBefore(LocalDateTime.now())) {
+                throw new IllegalArgumentException("La fecha y hora deben ser futuras.");
+            }
+
+            boolean existeCita = appointmentRepository.existsByUsuarioIdUsuarioAndFechaHora(
+                    cita.getUsuario().getIdUsuario(), dto.getFechaHora());
+            if (existeCita) {
+                throw new IllegalArgumentException("El veterinario ya tiene una cita en la fecha y hora indicada.");
             }
 
             cita.setFechaHora(dto.getFechaHora());
         }
 
-        if (dto.getEstado() != null)
+        // 🔹 5. Actualizar estado si se envía uno nuevo
+        if (dto.getEstado() != null) {
             cita.setEstado(dto.getEstado());
+        }
 
-        if (dto.getMotivo() != null)
+        // 🔹 6. Actualizar motivo si se envía uno nuevo
+        if (dto.getMotivo() != null && !dto.getMotivo().isBlank()) {
             cita.setMotivo(dto.getMotivo());
+        }
 
-        appointmentRepository.save(cita);
-        return mapToResponse(cita);
+        // 🔹 7. Guardar cambios
+        Appointment updated = appointmentRepository.save(cita);
+
+        // 🔹 8. Retornar DTO
+        return mapToResponse(updated);
     }
 
     @Override

@@ -41,7 +41,7 @@ public interface ClientRepository extends JpaRepository<Client, Long> {
      * @param idUsuario el ID del usuario
      * @return Optional con el cliente si existe, vacío en caso contrario
      */
-    Optional<Client> findByUsuario_IdUsuario(Integer idUsuario);
+    Optional<Client> findByUsuario_IdUsuario(Long idUsuario);
 
     /**
      * Verifica si existe un cliente con el documento especificado.
@@ -65,7 +65,7 @@ public interface ClientRepository extends JpaRepository<Client, Long> {
      * @param idUsuario el ID del usuario a verificar
      * @return true si existe, false en caso contrario
      */
-    boolean existsByUsuario_IdUsuario(Integer idUsuario);
+    boolean existsByUsuario_IdUsuario(Long idUsuario);
 
     /**
      * Obtiene todos los clientes con un estado específico.

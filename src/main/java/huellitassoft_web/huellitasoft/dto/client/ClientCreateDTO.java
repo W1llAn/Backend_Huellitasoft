@@ -92,5 +92,5 @@ public class ClientCreateDTO {
             example = "5"
     )
     @NotNull(message = "El ID del usuario no puede ser nulo")
-    private Integer idUsuario;
+    private Long idUsuario;
 }
