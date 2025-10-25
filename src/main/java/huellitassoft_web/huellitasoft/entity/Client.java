@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 /**
  * Entidad que representa un cliente en el sistema.
  * Los clientes son dueños de mascotas que reciben servicios veterinarios.
+ * Cada cliente debe tener una cuenta de usuario con el rol CLIENTE.
  *
  * @author Backend Team
  * @version 1.0
@@ -48,4 +49,8 @@ public class Client {
     @Column(name = "estado", nullable = false)
     @Enumerated(EnumType.STRING)
     private ClientState estado;
+
+    @ManyToOne
+    @JoinColumn(name = "id_usuario", nullable = false)
+    private User usuario;
 }
