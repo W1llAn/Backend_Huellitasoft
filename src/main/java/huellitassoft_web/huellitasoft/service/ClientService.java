@@ -57,7 +57,7 @@ public interface ClientService {
      * @return DTO con la información del cliente
      * @throws huellitassoft_web.huellitasoft.exception.ResourceNotFoundException si el cliente no existe
      */
-    ClientResponseDTO getClientByUsuarioId(Integer idUsuario);
+    ClientResponseDTO getClientByUsuarioId(Long idUsuario);
 
     /**
      * Obtiene todos los clientes con un estado específico.

@@ -182,7 +182,7 @@ public class ClientController {
     public ResponseEntity<ClientResponseDTO> getClientByUsuarioId(
             @PathVariable
             @Parameter(description = "ID del usuario", example = "5")
-            Integer idUsuario
+            Long idUsuario
     ) {
         log.info("GET /api/clientes/usuario/{} - Obteniendo cliente por ID de usuario", idUsuario);
         ClientResponseDTO cliente = clientService.getClientByUsuarioId(idUsuario);

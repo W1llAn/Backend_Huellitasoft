@@ -44,6 +44,8 @@ public class SecurityConfig {
     private static final String CONSULTAS_WILDCARD = "/api/consultas/**";
     private static final String TRATAMIENTOS_ENDPOINT = "/api/tratamientos";
     private static final String TRATAMIENTOS_WILDCARD = "/api/tratamientos/**";
+    private static final String CITAS_ENDPOINT = "/api/citas";
+    private static final String CITAS_WILDCARD = "/api/citas/**";
     private static final String ROLE_ADMIN = "ADMINISTRADOR";
     private static final String ROLE_ADMIN_VET = "ADMINISTRADOR_VETERINARIA";
     private static final String ROLE_VETERINARIO = "VETERINARIO";
@@ -132,6 +134,16 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, TRATAMIENTOS_ENDPOINT).hasAnyRole(ROLE_VETERINARIO, ROLE_ADMIN, ROLE_ADMIN_VET)
                         .requestMatchers(HttpMethod.PUT, TRATAMIENTOS_WILDCARD).hasAnyRole(ROLE_VETERINARIO, ROLE_ADMIN, ROLE_ADMIN_VET)
                         .requestMatchers(HttpMethod.DELETE, TRATAMIENTOS_WILDCARD).hasAnyRole(ROLE_VETERINARIO, ROLE_ADMIN, ROLE_ADMIN_VET)
+                        //Endpoints de citas permitido para autenticados
+                        .requestMatchers(HttpMethod.GET, CITAS_ENDPOINT).authenticated()
+                        .requestMatchers(HttpMethod.GET, CITAS_WILDCARD).authenticated()
+                        .requestMatchers(HttpMethod.POST, CITAS_ENDPOINT).authenticated()
+                        .requestMatchers(HttpMethod.POST, CITAS_WILDCARD).authenticated()
+                        .requestMatchers(HttpMethod.PUT, CITAS_ENDPOINT).authenticated()
+                        .requestMatchers(HttpMethod.PUT, CITAS_WILDCARD).authenticated()
+                        .requestMatchers(HttpMethod.DELETE, CITAS_ENDPOINT).authenticated()
+                        .requestMatchers(HttpMethod.DELETE, CITAS_WILDCARD).authenticated()
+
 
                         // Endpoints protegidos - requieren autenticación
                         .requestMatchers(HttpMethod.GET, USERS_WILDCARD).authenticated()
