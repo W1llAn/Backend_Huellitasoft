@@ -21,6 +21,18 @@ public class AppointmentResponseDTO {
     @Schema(description = "Nombre completo del cliente", example = "Juan Pérez")
     private String nombreCliente;
 
+    @Schema(description = "ID cliente", example = "1")
+    private Long idCliente;
+
+    @Schema(description = "ID mascota", example = "2")
+    private Long idMascota;
+
+    @Schema(description = "ID usuario", example = "2")
+    private Long idUsuario;
+
+    @Schema(description = "ID sucursal", example = "2")
+    private Long idSucursal;
+
     @Schema(description = "Nombre de la mascota", example = "Firulais")
     private String nombreMascota;
 
