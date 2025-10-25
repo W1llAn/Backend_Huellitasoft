@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
  * DTO para responder con información de un cliente.
  * 
  * Se utiliza en GET, POST, PUT para retornar datos del cliente.
- * Incluye el estado del cliente (ACTIVO/INACTIVO).
+ * Incluye el estado del cliente (ACTIVO/INACTIVO) e ID del usuario.
  * 
  * @author Backend Team
  * @version 1.0
@@ -70,4 +70,10 @@ public class ClientResponseDTO {
             implementation = ClientState.class
     )
     private ClientState estado;
+
+    @Schema(
+            description = "ID del usuario asociado al cliente",
+            example = "5"
+    )
+    private Integer idUsuario;
 }

@@ -51,6 +51,15 @@ public interface ClientService {
     ClientResponseDTO getClientByEmail(String email);
 
     /**
+     * Obtiene un cliente por el ID del usuario asociado.
+     *
+     * @param idUsuario el ID del usuario
+     * @return DTO con la información del cliente
+     * @throws huellitassoft_web.huellitasoft.exception.ResourceNotFoundException si el cliente no existe
+     */
+    ClientResponseDTO getClientByUsuarioId(Integer idUsuario);
+
+    /**
      * Obtiene todos los clientes con un estado específico.
      *
      * @param estado el estado a filtrar
