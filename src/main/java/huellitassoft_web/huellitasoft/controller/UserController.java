@@ -75,7 +75,7 @@ public class UserController {
             @ApiResponse(responseCode = "404", description = "Usuario no encontrado"),
             @ApiResponse(responseCode = "401", description = "No autenticado")
     })
-    public ResponseEntity<UserResponseDTO> getUserById(@PathVariable Integer idUsuario) {
+    public ResponseEntity<UserResponseDTO> getUserById(@PathVariable Long idUsuario) {
         log.info("GET /api/users/{} - Obteniendo usuario por ID", idUsuario);
         UserResponseDTO user = userService.getUserById(idUsuario);
         return ResponseEntity.ok(user);
@@ -184,7 +184,7 @@ public class UserController {
             @ApiResponse(responseCode = "409", description = "El email o usuario ya existe"),
             @ApiResponse(responseCode = "401", description = "No autenticado")
     })
-    public ResponseEntity<UserResponseDTO> updateUser(@PathVariable Integer idUsuario, @Valid @RequestBody UserCreateDTO updateDTO) {
+    public ResponseEntity<UserResponseDTO> updateUser(@PathVariable Long idUsuario, @Valid @RequestBody UserCreateDTO updateDTO) {
         log.info("PUT /api/users/{} - Actualizando usuario", idUsuario);
         UserResponseDTO user = userService.updateUser(idUsuario, updateDTO);
         return ResponseEntity.ok(user);
@@ -210,7 +210,7 @@ public class UserController {
             @ApiResponse(responseCode = "401", description = "No autenticado")
     })
     public ResponseEntity<UserResponseDTO> changeUserState(
-            @PathVariable Integer idUsuario,
+            @PathVariable Long idUsuario,
             @RequestParam UserState nuevoEstado) {
         log.info("PATCH /api/users/{}/state - Cambiando estado del usuario a {}", idUsuario, nuevoEstado);
         UserResponseDTO user = userService.changeUserState(idUsuario, nuevoEstado);
@@ -234,7 +234,7 @@ public class UserController {
             @ApiResponse(responseCode = "403", description = "Acceso denegado"),
             @ApiResponse(responseCode = "401", description = "No autenticado")
     })
-    public ResponseEntity<Void> deleteUser(@PathVariable Integer idUsuario) {
+    public ResponseEntity<Void> deleteUser(@PathVariable Long idUsuario) {
         log.info("DELETE /api/users/{} - Eliminando usuario", idUsuario);
         userService.deleteUser(idUsuario);
         return ResponseEntity.noContent().build();

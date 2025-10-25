@@ -26,7 +26,7 @@ public interface UserService {
      * @param idUsuario el ID del usuario
      * @return el usuario como DTO
      */
-    UserResponseDTO getUserById(Integer idUsuario);
+    UserResponseDTO getUserById(Long idUsuario);
 
     /**
      * Obtiene un usuario por su email.
@@ -67,14 +67,14 @@ public interface UserService {
      * @param updateDTO DTO con los datos a actualizar
      * @return el usuario actualizado como DTO
      */
-    UserResponseDTO updateUser(Integer idUsuario, UserCreateDTO updateDTO);
+    UserResponseDTO updateUser(Long idUsuario, UserCreateDTO updateDTO);
 
     /**
      * Elimina un usuario.
      *
      * @param idUsuario el ID del usuario a eliminar
      */
-    void deleteUser(Integer idUsuario);
+    void deleteUser(Long idUsuario);
 
     /**
      * Cambia el estado de un usuario.
@@ -83,6 +83,6 @@ public interface UserService {
      * @param nuevoEstado el nuevo estado
      * @return el usuario con estado actualizado como DTO
      */
-    UserResponseDTO changeUserState(Integer idUsuario, UserState nuevoEstado);
+    UserResponseDTO changeUserState(Long idUsuario, UserState nuevoEstado);
 }
 

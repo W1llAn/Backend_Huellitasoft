@@ -91,7 +91,7 @@ public class ClientServiceImpl implements ClientService {
 
     @Override
     @Transactional(readOnly = true)
-    public ClientResponseDTO getClientByUsuarioId(Integer idUsuario) {
+    public ClientResponseDTO getClientByUsuarioId(Long idUsuario) {
         log.info("Obteniendo cliente por ID de usuario: {}", idUsuario);
         Client client = clientRepository.findByUsuario_IdUsuario(idUsuario)
                 .orElseThrow(() -> {

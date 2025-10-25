@@ -13,7 +13,7 @@ import java.util.Optional;
  * Proporciona métodos CRUD y búsquedas personalizadas.
  */
 @Repository
-public interface UserRepository extends JpaRepository<User, Integer> {
+public interface UserRepository extends JpaRepository<User, Long> {
 
     /**
      * Busca un usuario por su email.
