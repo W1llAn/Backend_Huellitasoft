@@ -60,7 +60,7 @@ public class UserServiceImpl implements UserService {
      */
     @Override
     @Transactional(readOnly = true)
-    public UserResponseDTO getUserById(Integer idUsuario) {
+    public UserResponseDTO getUserById(Long idUsuario) {
         log.info("Obteniendo usuario con ID: {}", idUsuario);
         User user = userRepository.findById(idUsuario)
                 .orElseThrow(() -> new ResourceNotFoundException(USER_NOT_FOUND_BY_ID + idUsuario));
@@ -161,7 +161,7 @@ public class UserServiceImpl implements UserService {
      * @throws ResourceAlreadyExistsException si el email o usuario ya existe en otro usuario
      */
     @Override
-    public UserResponseDTO updateUser(Integer idUsuario, UserCreateDTO updateDTO) {
+    public UserResponseDTO updateUser(Long idUsuario, UserCreateDTO updateDTO) {
         log.info("Actualizando usuario con ID: {}", idUsuario);
 
         User user = userRepository.findById(idUsuario)
@@ -197,7 +197,7 @@ public class UserServiceImpl implements UserService {
      * @throws ResourceNotFoundException si el usuario no existe
      */
     @Override
-    public void deleteUser(Integer idUsuario) {
+    public void deleteUser(Long idUsuario) {
         log.info("Eliminando usuario con ID: {}", idUsuario);
 
         if (!userRepository.existsById(idUsuario)) {
@@ -218,7 +218,7 @@ public class UserServiceImpl implements UserService {
      * @throws ResourceNotFoundException si el usuario no existe
      */
     @Override
-    public UserResponseDTO changeUserState(Integer idUsuario, UserState nuevoEstado) {
+    public UserResponseDTO changeUserState(Long idUsuario, UserState nuevoEstado) {
         log.info("Cambiando estado del usuario {} a {}", idUsuario, nuevoEstado);
 
         User user = userRepository.findById(idUsuario)
