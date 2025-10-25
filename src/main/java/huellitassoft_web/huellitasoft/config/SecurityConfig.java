@@ -38,6 +38,12 @@ public class SecurityConfig {
     private static final String MASCOTAS_WILDCARD = "/api/mascotas/**";
     private static final String CLIENTES_ENDPOINT = "/api/clientes";
     private static final String CLIENTES_WILDCARD = "/api/clientes/**";
+    private static final String HISTORIALES_ENDPOINT = "/api/historiales-clinicos";
+    private static final String HISTORIALES_WILDCARD = "/api/historiales-clinicos/**";
+    private static final String CONSULTAS_ENDPOINT = "/api/consultas";
+    private static final String CONSULTAS_WILDCARD = "/api/consultas/**";
+    private static final String TRATAMIENTOS_ENDPOINT = "/api/tratamientos";
+    private static final String TRATAMIENTOS_WILDCARD = "/api/tratamientos/**";
     private static final String CITAS_ENDPOINT = "/api/citas";
     private static final String CITAS_WILDCARD = "/api/citas/**";
     private static final String ROLE_ADMIN = "ADMINISTRADOR";
@@ -108,6 +114,26 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PATCH, CLIENTES_WILDCARD).hasAnyRole(ROLE_VETERINARIO, ROLE_ADMIN, ROLE_ADMIN_VET)
                         .requestMatchers(HttpMethod.DELETE, CLIENTES_WILDCARD).hasAnyRole(ROLE_VETERINARIO, ROLE_ADMIN, ROLE_ADMIN_VET)
 
+                        // Endpoints de HISTORIAL CLÍNICO - solo para veterinarios y administradores
+                        .requestMatchers(HttpMethod.GET, HISTORIALES_ENDPOINT).hasAnyRole(ROLE_VETERINARIO, ROLE_ADMIN, ROLE_ADMIN_VET)
+                        .requestMatchers(HttpMethod.GET, HISTORIALES_WILDCARD).hasAnyRole(ROLE_VETERINARIO, ROLE_ADMIN, ROLE_ADMIN_VET)
+                        .requestMatchers(HttpMethod.POST, HISTORIALES_ENDPOINT).hasAnyRole(ROLE_VETERINARIO, ROLE_ADMIN, ROLE_ADMIN_VET)
+                        .requestMatchers(HttpMethod.PUT, HISTORIALES_WILDCARD).hasAnyRole(ROLE_VETERINARIO, ROLE_ADMIN, ROLE_ADMIN_VET)
+                        .requestMatchers(HttpMethod.DELETE, HISTORIALES_WILDCARD).hasAnyRole(ROLE_VETERINARIO, ROLE_ADMIN, ROLE_ADMIN_VET)
+
+                        // Endpoints de CONSULTAS - solo para veterinarios y administradores
+                        .requestMatchers(HttpMethod.GET, CONSULTAS_ENDPOINT).hasAnyRole(ROLE_VETERINARIO, ROLE_ADMIN, ROLE_ADMIN_VET)
+                        .requestMatchers(HttpMethod.GET, CONSULTAS_WILDCARD).hasAnyRole(ROLE_VETERINARIO, ROLE_ADMIN, ROLE_ADMIN_VET)
+                        .requestMatchers(HttpMethod.POST, CONSULTAS_ENDPOINT).hasAnyRole(ROLE_VETERINARIO, ROLE_ADMIN, ROLE_ADMIN_VET)
+                        .requestMatchers(HttpMethod.PUT, CONSULTAS_WILDCARD).hasAnyRole(ROLE_VETERINARIO, ROLE_ADMIN, ROLE_ADMIN_VET)
+                        .requestMatchers(HttpMethod.DELETE, CONSULTAS_WILDCARD).hasAnyRole(ROLE_VETERINARIO, ROLE_ADMIN, ROLE_ADMIN_VET)
+
+                        // Endpoints de TRATAMIENTOS - solo para veterinarios y administradores
+                        .requestMatchers(HttpMethod.GET, TRATAMIENTOS_ENDPOINT).hasAnyRole(ROLE_VETERINARIO, ROLE_ADMIN, ROLE_ADMIN_VET)
+                        .requestMatchers(HttpMethod.GET, TRATAMIENTOS_WILDCARD).hasAnyRole(ROLE_VETERINARIO, ROLE_ADMIN, ROLE_ADMIN_VET)
+                        .requestMatchers(HttpMethod.POST, TRATAMIENTOS_ENDPOINT).hasAnyRole(ROLE_VETERINARIO, ROLE_ADMIN, ROLE_ADMIN_VET)
+                        .requestMatchers(HttpMethod.PUT, TRATAMIENTOS_WILDCARD).hasAnyRole(ROLE_VETERINARIO, ROLE_ADMIN, ROLE_ADMIN_VET)
+                        .requestMatchers(HttpMethod.DELETE, TRATAMIENTOS_WILDCARD).hasAnyRole(ROLE_VETERINARIO, ROLE_ADMIN, ROLE_ADMIN_VET)
                         //Endpoints de citas permitido para autenticados
                         .requestMatchers(HttpMethod.GET, CITAS_ENDPOINT).authenticated()
                         .requestMatchers(HttpMethod.GET, CITAS_WILDCARD).authenticated()
