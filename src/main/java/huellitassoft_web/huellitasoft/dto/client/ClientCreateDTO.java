@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
  * DTO para crear un nuevo cliente.
  * 
  * Contiene validaciones de datos requeridos para la creación de un cliente.
+ * Incluye el ID del usuario que será la cuenta del cliente.
  * 
  * @author Backend Team
  * @version 1.0
@@ -85,4 +86,11 @@ public class ClientCreateDTO {
     @NotBlank(message = "La dirección no puede estar vacía")
     @Size(min = 5, max = 255, message = "La dirección debe tener entre 5 y 255 caracteres")
     private String direccion;
+
+    @Schema(
+            description = "ID del usuario asociado al cliente (debe tener rol CLIENTE)",
+            example = "5"
+    )
+    @NotNull(message = "El ID del usuario no puede ser nulo")
+    private Integer idUsuario;
 }
