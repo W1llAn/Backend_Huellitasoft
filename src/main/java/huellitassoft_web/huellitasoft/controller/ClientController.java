@@ -161,6 +161,35 @@ public class ClientController {
     }
 
     /**
+     * Obtiene un cliente por el ID del usuario asociado.
+     *
+     * @param idUsuario el ID del usuario
+     * @return datos del cliente
+     */
+    @GetMapping("/usuario/{idUsuario}")
+    @Operation(
+            summary = "Obtener cliente por ID de usuario",
+            description = "Busca y retorna un cliente usando el ID del usuario asociado"
+    )
+    @ApiResponse(
+            responseCode = "200",
+            description = "Cliente encontrado"
+    )
+    @ApiResponse(
+            responseCode = "404",
+            description = "Cliente asociado a este usuario no encontrado"
+    )
+    public ResponseEntity<ClientResponseDTO> getClientByUsuarioId(
+            @PathVariable
+            @Parameter(description = "ID del usuario", example = "5")
+            Integer idUsuario
+    ) {
+        log.info("GET /api/clientes/usuario/{} - Obteniendo cliente por ID de usuario", idUsuario);
+        ClientResponseDTO cliente = clientService.getClientByUsuarioId(idUsuario);
+        return ResponseEntity.ok(cliente);
+    }
+
+    /**
      * Obtiene todos los clientes con un estado específico.
      *
      * @param estado el estado a filtrar (ACTIVO, INACTIVO)
