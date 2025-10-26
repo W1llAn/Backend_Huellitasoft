@@ -48,7 +48,7 @@ public class ConsultationServiceImpl implements ConsultationService {
                 });
 
         // Validar que el veterinario existe
-        User veterinarian = userRepository.findById(consultationCreateDTO.getIdVeterinario())
+        User veterinarian = userRepository.findById(consultationCreateDTO.getIdVeterinario().longValue())
                 .orElseThrow(() -> {
                     log.error("Veterinarian not found: {}", consultationCreateDTO.getIdVeterinario());
                     return new ResourceNotFoundException(VETERINARIAN_NOT_FOUND_MSG + consultationCreateDTO.getIdVeterinario());
@@ -190,7 +190,7 @@ public class ConsultationServiceImpl implements ConsultationService {
                 .idHistoria(consultation.getMedicalHistory().getIdHistoria())
                 .fechaHora(consultation.getFechaHora())
                 .motivo(consultation.getMotivo())
-                .idVeterinario(consultation.getVeterinarian().getIdUsuario())
+                .idVeterinario(consultation.getVeterinarian().getIdUsuario().intValue())
                 .nombreVeterinario(consultation.getVeterinarian().getUsername())
                 .diagnostico(consultation.getDiagnostico())
                 .indicaciones(consultation.getIndicaciones())

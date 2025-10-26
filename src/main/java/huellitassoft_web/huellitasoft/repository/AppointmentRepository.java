@@ -20,7 +20,7 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
     List<Appointment> findByUsuarioIdUsuario(Long idUsuario);
 
     // Buscar por sucursal
-    List<Appointment> findBySucursalIdSucursal(Long idSucursal);
+    List<Appointment> findBySucursalIdSubsidiary(Long idSubsidiary);
 
     // Buscar por estado
     List<Appointment> findByEstado(EstadoCita estado);

@@ -194,7 +194,7 @@ public class AppointmentServiceImpl implements AppointmentService {
 
     @Override
     public List<AppointmentResponseDTO> findBySucursal(Long idSucursal) {
-        return appointmentRepository.findBySucursalIdSucursal(idSucursal).stream()
+        return appointmentRepository.findBySucursalIdSubsidiary(idSucursal).stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
@@ -243,8 +243,8 @@ public class AppointmentServiceImpl implements AppointmentService {
                 .nombreMascota(cita.getMascota().getNombre())
                 .idUsuario(cita.getUsuario().getIdUsuario())
                 .nombreUsuario(cita.getUsuario().getUsername())
-                .idSucursal(cita.getSucursal().getIdSucursal())
-                .nombreSucursal(cita.getSucursal().getNombre())
+                .idSucursal(cita.getSucursal().getIdSubsidiary())
+                .nombreSucursal(cita.getSucursal().getName())
                 .build();
     }
 }
