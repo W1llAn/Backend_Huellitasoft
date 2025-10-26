@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Schema(description = "DTO de respuesta para una vacuna")
-public class VaccineResposeDTO {
+public class VaccineResponseDTO {
     @Schema(
             description = "ID único de la vacuna",
             example = "1"
@@ -29,4 +29,10 @@ public class VaccineResposeDTO {
             example = "El parvovirus es otra enfermedad viral que es de cuidado, pues sus efectos pueden afectar seriamente a tu mascota, especialmente cachorros."
     )
     private String descripcion;
+
+    @Schema(
+            description = "ID de la especie a la que pertenece",
+            example = "1"
+    )
+    private Long idEspecie;
 }
