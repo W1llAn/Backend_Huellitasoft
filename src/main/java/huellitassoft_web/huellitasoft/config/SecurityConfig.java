@@ -42,6 +42,13 @@ public class SecurityConfig {
     private static final String ROLE_ADMIN_VET = "ADMINISTRADOR_VETERINARIA";
     private static final String ROLE_VETERINARIO = "VETERINARIO";
 
+    private static final String VACUNAS_ENDPOINT = "/api/vacunas";
+    private static final String VACUNAS_WILDCARD = "/api/vacunas/**";
+    private static final String ESQ_VAC_ENDPOINT = "/api/esquemas-vacunacion";
+    private static final String ESQ_VAC_WILDCARD = "/api/esquemas-vacunacion/**";
+    private static final String PET_SCHEME_ENDPOINT = "/api/mascota-esquemas";
+    private static final String PET_SCHEME_WILDCARD = "/api/mascota-esquemas/**";
+
     @Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri}")
     private String issuerUri;
 
@@ -59,20 +66,20 @@ public class SecurityConfig {
         http
                 // CORS
                 .cors(cors -> cors.configurationSource(corsConfigurationSource))
-                
+
                 // CSRF deshabilitado (ya que usamos JWT stateless)
                 .csrf(csrf -> csrf.disable())
-                
+
                 // Modo stateless para APIs REST
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                
+
                 // Configuración de autorización
                 .authorizeHttpRequests(authz -> authz
                         // Endpoints públicos - sin autenticación
                         .requestMatchers(HttpMethod.POST, USERS_ENDPOINT + "/register-from-auth0").permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
                         .requestMatchers("/actuator/**").permitAll()
-                        
+
                         // Endpoints de RAZAS - GET permitido para autenticados
                         .requestMatchers(HttpMethod.GET, RAZAS_ENDPOINT).authenticated()
                         .requestMatchers(HttpMethod.GET, RAZAS_WILDCARD).authenticated()
@@ -80,7 +87,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, RAZAS_ENDPOINT).hasAnyRole(ROLE_VETERINARIO, ROLE_ADMIN, ROLE_ADMIN_VET)
                         .requestMatchers(HttpMethod.PUT, RAZAS_WILDCARD).hasAnyRole(ROLE_VETERINARIO, ROLE_ADMIN, ROLE_ADMIN_VET)
                         .requestMatchers(HttpMethod.DELETE, RAZAS_WILDCARD).hasAnyRole(ROLE_VETERINARIO, ROLE_ADMIN, ROLE_ADMIN_VET)
-                        
+
                         // Endpoints de ESPECIES - GET permitido para autenticados
                         .requestMatchers(HttpMethod.GET, ESPECIES_ENDPOINT).authenticated()
                         .requestMatchers(HttpMethod.GET, ESPECIES_WILDCARD).authenticated()
@@ -110,16 +117,37 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, USERS_WILDCARD).authenticated()
                         .requestMatchers(HttpMethod.PUT, USERS_WILDCARD).authenticated()
                         .requestMatchers(HttpMethod.PATCH, USERS_WILDCARD).authenticated()
-                        
+
                         // Endpoints restringidos a administradores (ADMINISTRADOR o ADMINISTRADOR_VETERINARIA)
                         .requestMatchers(HttpMethod.GET, USERS_ENDPOINT).hasAnyRole(ROLE_ADMIN, ROLE_ADMIN_VET)
                         .requestMatchers(HttpMethod.GET, USERS_ENDPOINT + "/role/**").hasAnyRole(ROLE_ADMIN, ROLE_ADMIN_VET)
                         .requestMatchers(HttpMethod.DELETE, USERS_WILDCARD).hasAnyRole(ROLE_ADMIN, ROLE_ADMIN_VET)
-                        
+
+                        // Endpoints de VACUNAS - GET autenticado; mutaciones solo roles no-cliente
+                        .requestMatchers(HttpMethod.GET, VACUNAS_ENDPOINT).authenticated()
+                        .requestMatchers(HttpMethod.GET, VACUNAS_WILDCARD).authenticated()
+                        .requestMatchers(HttpMethod.POST, VACUNAS_ENDPOINT).hasAnyRole(ROLE_VETERINARIO, ROLE_ADMIN, ROLE_ADMIN_VET)
+                        .requestMatchers(HttpMethod.PUT, VACUNAS_WILDCARD).hasAnyRole(ROLE_VETERINARIO, ROLE_ADMIN, ROLE_ADMIN_VET)
+                        .requestMatchers(HttpMethod.DELETE, VACUNAS_WILDCARD).hasAnyRole(ROLE_VETERINARIO, ROLE_ADMIN, ROLE_ADMIN_VET)
+
+                        // Endpoints de ESQUEMAS DE VACUNACIÓN - CRUD por roles, GET autenticado
+                        .requestMatchers(HttpMethod.GET, ESQ_VAC_ENDPOINT).authenticated()
+                        .requestMatchers(HttpMethod.GET, ESQ_VAC_WILDCARD).authenticated()
+                        .requestMatchers(HttpMethod.POST, ESQ_VAC_ENDPOINT).hasAnyRole(ROLE_VETERINARIO, ROLE_ADMIN, ROLE_ADMIN_VET)
+                        .requestMatchers(HttpMethod.PUT, ESQ_VAC_WILDCARD).hasAnyRole(ROLE_VETERINARIO, ROLE_ADMIN, ROLE_ADMIN_VET)
+                        .requestMatchers(HttpMethod.DELETE, ESQ_VAC_WILDCARD).hasAnyRole(ROLE_VETERINARIO, ROLE_ADMIN, ROLE_ADMIN_VET)
+
+                        // Endpoints de MASCOTA↔ESQUEMA (seguimiento)
+                        // GET autenticado; asignar/actualizar estado/eliminar solo roles no-cliente
+                        .requestMatchers(HttpMethod.GET, PET_SCHEME_WILDCARD).authenticated()
+                        .requestMatchers(HttpMethod.POST, PET_SCHEME_ENDPOINT).hasAnyRole(ROLE_VETERINARIO, ROLE_ADMIN, ROLE_ADMIN_VET)
+                        .requestMatchers(HttpMethod.PATCH, PET_SCHEME_WILDCARD).hasAnyRole(ROLE_VETERINARIO, ROLE_ADMIN, ROLE_ADMIN_VET)
+                        .requestMatchers(HttpMethod.DELETE, PET_SCHEME_WILDCARD).hasAnyRole(ROLE_VETERINARIO, ROLE_ADMIN, ROLE_ADMIN_VET)
+
                         // Todos los demás requieren autenticación
                         .anyRequest().authenticated()
                 )
-                
+
                 // Configuración OAuth2 Resource Server con JWT
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .jwt(jwt -> jwt
@@ -140,11 +168,11 @@ public class SecurityConfig {
     @Bean
     public JwtDecoder jwtDecoder() {
         NimbusJwtDecoder jwtDecoder = NimbusJwtDecoder.withIssuerLocation(issuerUri).build();
-        
+
         // Validadores personalizados
         OAuth2TokenValidator<Jwt> issuerValidator = JwtValidators.createDefaultWithIssuer(issuerUri);
         OAuth2TokenValidator<Jwt> audienceValidator = new AudienceValidator(audience);
-        
+
         // Combina los validadores
         OAuth2TokenValidator<Jwt> delegatingTokenValidator =
                 new DelegatingOAuth2TokenValidator<>(issuerValidator, audienceValidator);
