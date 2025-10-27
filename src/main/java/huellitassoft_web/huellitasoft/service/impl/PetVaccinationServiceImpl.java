@@ -56,7 +56,7 @@ public class PetVaccinationServiceImpl implements PetVaccinationService {
         // Extraer el ID numérico del formato "auth0|7"
         int userId = Math.toIntExact(Long.valueOf(extractUserIdFromAuth0Subject(authenticatedUsername)));
 
-        User user = userRepository.findById(userId).orElseThrow(() -> {
+        User user = userRepository.findById(Long.valueOf(userId)).orElseThrow(() -> {
             log.error(USER_NOT_FOUND, authenticatedUsername);
             return new ResourceNotFoundException("Usuario no encontrado con ID: " + userId);
         });
