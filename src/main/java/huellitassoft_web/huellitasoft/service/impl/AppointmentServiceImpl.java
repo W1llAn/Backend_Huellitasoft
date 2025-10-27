@@ -1,10 +1,12 @@
 package huellitassoft_web.huellitasoft.service.impl;
 
+import huellitassoft_web.huellitasoft.dto.Notification.NotificationRequestDTO;
 import huellitassoft_web.huellitasoft.dto.appointment.AppointmentCreateDTO;
 import huellitassoft_web.huellitasoft.dto.appointment.AppointmentResponseDTO;
 import huellitassoft_web.huellitasoft.dto.appointment.AppointmentUpdateDTO;
 import huellitassoft_web.huellitasoft.entity.*;
 import huellitassoft_web.huellitasoft.enums.EstadoCita;
+import huellitassoft_web.huellitasoft.enums.NotificationTitle;
 import huellitassoft_web.huellitasoft.enums.UserRol;
 import huellitassoft_web.huellitasoft.exception.ResourceNotFoundException;
 import huellitassoft_web.huellitasoft.repository.*;
@@ -28,6 +30,8 @@ public class AppointmentServiceImpl implements AppointmentService {
     private final PetRepository petRepository;
     private final UserRepository userRepository;
     private final SubsidiaryRepository subsidiaryRepository;
+    private final NotificationService notificationService;
+
     @Override
     public AppointmentResponseDTO create(AppointmentCreateDTO dto) {
         // Validar existencia de cliente
@@ -83,6 +87,9 @@ public class AppointmentServiceImpl implements AppointmentService {
                 .build();
 
         appointmentRepository.save(appointment);
+
+        sendAppointmentCreatedNotification(appointment);
+
         return mapToResponse(appointment);
     }
 
@@ -145,6 +152,8 @@ public class AppointmentServiceImpl implements AppointmentService {
 
         // 🔹 7. Guardar cambios
         Appointment updated = appointmentRepository.save(cita);
+
+        sendAppointmentUpdatedNotification(updated);
 
         // 🔹 8. Retornar DTO
         return mapToResponse(updated);
@@ -246,5 +255,59 @@ public class AppointmentServiceImpl implements AppointmentService {
                 .idSucursal(cita.getSucursal().getIdSubsidiary())
                 .nombreSucursal(cita.getSucursal().getName())
                 .build();
+    }
+
+    // ===== MÉTODOS HELPER DE NOTIFICACIONES =====
+
+    private void sendAppointmentCreatedNotification(Appointment appointment) {
+        NotificationRequestDTO notification = new NotificationRequestDTO();
+        notification.setTitulo(NotificationTitle.CITA_CREADA);
+        notification.setAsunto("Nueva cita programada");
+        notification.setMensaje(String.format(
+                "Se ha programado una cita para %s el %s. Motivo: %s",
+                appointment.getMascota().getNombre(),
+                appointment.getFechaHora().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")),
+                appointment.getMotivo()
+        ));
+        notification.setTipo("CITA");
+        notification.setIdCliente(appointment.getCliente().getIdCliente());
+        notification.setIdVeterinario(appointment.getUsuario().getIdUsuario()); // ✅ Corregido
+        notification.setIdCita(appointment.getIdCita());
+
+        notificationService.createNotification(notification);
+    }
+
+    private void sendAppointmentUpdatedNotification(Appointment appointment) {
+        NotificationRequestDTO notification = new NotificationRequestDTO();
+        notification.setTitulo(NotificationTitle.CITA_CONFIRMADA);
+        notification.setAsunto("Cita modificada");
+        notification.setMensaje(String.format(
+                "Su cita para %s ha sido modificada. Nueva fecha: %s",
+                appointment.getMascota().getNombre(),
+                appointment.getFechaHora().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"))
+        ));
+        notification.setTipo("CITA");
+        notification.setIdCliente(appointment.getCliente().getIdCliente());
+        notification.setIdVeterinario(appointment.getUsuario().getIdUsuario()); // ✅ Corregido
+        notification.setIdCita(appointment.getIdCita());
+
+        notificationService.createNotification(notification);
+    }
+
+    private void sendAppointmentCancelledNotification(Appointment appointment) {
+        NotificationRequestDTO notification = new NotificationRequestDTO();
+        notification.setTitulo(NotificationTitle.CITA_CANCELADA);
+        notification.setAsunto("Cita cancelada");
+        notification.setMensaje(String.format(
+                "La cita para %s programada el %s ha sido cancelada",
+                appointment.getMascota().getNombre(),
+                appointment.getFechaHora().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"))
+        ));
+        notification.setTipo("CITA");
+        notification.setIdCliente(appointment.getCliente().getIdCliente());
+        notification.setIdVeterinario(appointment.getUsuario().getIdUsuario()); // ✅ Corregido
+        notification.setIdCita(appointment.getIdCita());
+
+        notificationService.createNotification(notification);
     }
 }
