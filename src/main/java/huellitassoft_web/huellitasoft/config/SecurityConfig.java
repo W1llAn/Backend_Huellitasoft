@@ -49,6 +49,9 @@ public class SecurityConfig {
     private static final String PET_SCHEME_ENDPOINT = "/api/mascota-esquemas";
     private static final String PET_SCHEME_WILDCARD = "/api/mascota-esquemas/**";
 
+    private static final String PET_VACC_ENDPOINT       = "/api/vacunacion-mascota";
+    private static final String PET_VACC_WILDCARD       = "/api/vacunacion-mascota/**";
+
     @Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri}")
     private String issuerUri;
 
@@ -144,6 +147,13 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PATCH, PET_SCHEME_WILDCARD).hasAnyRole(ROLE_VETERINARIO, ROLE_ADMIN, ROLE_ADMIN_VET)
                         .requestMatchers(HttpMethod.DELETE, PET_SCHEME_WILDCARD).hasAnyRole(ROLE_VETERINARIO, ROLE_ADMIN, ROLE_ADMIN_VET)
 
+                        // Vacunación de mascota PetVaccination
+                        .requestMatchers(HttpMethod.POST, PET_VACC_ENDPOINT).hasRole(ROLE_VETERINARIO)
+                        .requestMatchers(HttpMethod.DELETE, PET_VACC_WILDCARD).hasAnyRole(ROLE_VETERINARIO, ROLE_ADMIN, ROLE_ADMIN_VET)
+                        .requestMatchers(HttpMethod.GET, PET_VACC_WILDCARD).hasAnyRole(ROLE_VETERINARIO, ROLE_ADMIN, ROLE_ADMIN_VET)
+
+                        // Si se quiere permitir que el CLIENTE consulte las vacunaciones de su mascota:
+                        // .requestMatchers(HttpMethod.GET, "/api/vacunacion-mascota/mascota/**").hasAnyRole("VETERINARIO","ADMINISTRADOR","CLIENTE")
                         // Todos los demás requieren autenticación
                         .anyRequest().authenticated()
                 )
