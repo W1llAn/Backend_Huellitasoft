@@ -7,9 +7,7 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 
 /**
  * Convertidor personalizado de JWT a Authentication.
@@ -19,57 +17,51 @@ import java.util.List;
 public class CustomJwtAuthenticationConverter extends JwtAuthenticationConverter {
 
     private static final String ROLES_CLAIM = "https://huellitasoft/roles";
+    private static final String USER_METADATA_CLAIM = "https://huellitasoft/user_metadata";
+    private static final String METADATA_ROLE_KEY = "rol";
 
     public CustomJwtAuthenticationConverter() {
-        super();
-        // Establecer el convertidor personalizado de autoridades
         setJwtGrantedAuthoritiesConverter(new CustomGrantedAuthoritiesConverter());
     }
 
-    /**
-     * Convertidor personalizado de autoridades que combina scopes y roles.
-     */
     private static class CustomGrantedAuthoritiesConverter implements Converter<Jwt, Collection<GrantedAuthority>> {
 
         private final JwtGrantedAuthoritiesConverter defaultConverter = new JwtGrantedAuthoritiesConverter();
 
         @Override
         public Collection<GrantedAuthority> convert(Jwt jwt) {
-            // Obtener las autoridades por defecto (scopes)
             Collection<GrantedAuthority> authorities = new ArrayList<>(defaultConverter.convert(jwt));
-            
-            // Agregar roles personalizados
-            List<GrantedAuthority> customAuthorities = extractAuthorities(jwt);
-            authorities.addAll(customAuthorities);
-            
+            authorities.addAll(extractAuthorities(jwt));
             return authorities;
         }
 
-        /**
-         * Extrae los roles del claim personalizado del JWT.
-         * Los roles ya vienen con el prefijo "ROLE_" en el JWT de Auth0.
-         *
-         * @param jwt el token JWT
-         * @return lista de GrantedAuthority basada en los roles
-         */
         private List<GrantedAuthority> extractAuthorities(Jwt jwt) {
             List<GrantedAuthority> authorities = new ArrayList<>();
-            
-            // Obtener los roles del claim personalizado
+
+            // Intentar obtener los roles del claim estándar
             List<String> roles = jwt.getClaimAsStringList(ROLES_CLAIM);
-            
-            if (roles != null && !roles.isEmpty()) {
-                for (String role : roles) {
-                    // Los roles de Auth0 ya vienen con ROLE_ prefix
-                    // Si no lo tienen, lo agregamos
-                    if (role.startsWith("ROLE_")) {
-                        authorities.add(new SimpleGrantedAuthority(role));
-                    } else {
-                        authorities.add(new SimpleGrantedAuthority("ROLE_" + role.toUpperCase()));
+
+            // Si no hay roles, buscar dentro de la metadata
+            if (roles == null || roles.isEmpty()) {
+                Map<String, Object> userMetadata = jwt.getClaim(USER_METADATA_CLAIM);
+                if (userMetadata != null && userMetadata.containsKey(METADATA_ROLE_KEY)) {
+                    Object roleValue = userMetadata.get(METADATA_ROLE_KEY);
+                    if (roleValue instanceof String roleStr && !roleStr.isEmpty()) {
+                        roles = Collections.singletonList(roleStr);
                     }
                 }
             }
-            
+            // Convertir roles a GrantedAuthority
+            if (roles != null) {
+                for (String role : roles) {
+                    String normalized = role.toUpperCase();
+                    if (!normalized.startsWith("ROLE_")) {
+                        normalized = "ROLE_" + normalized;
+                    }
+                    authorities.add(new SimpleGrantedAuthority(normalized));
+                }
+            }
+
             return authorities;
         }
     }

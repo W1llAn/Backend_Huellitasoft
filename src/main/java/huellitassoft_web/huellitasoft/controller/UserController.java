@@ -45,7 +45,6 @@ public class UserController {
      * @return lista de todos los usuarios
      */
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'ADMINISTRADOR_VETERINARIA')")
     @SecurityRequirement(name = "Bearer Authentication")
     @Operation(summary = "Obtener todos los usuarios", description = "Obtiene la lista completa de usuarios. Solo disponible para administradores.")
     @ApiResponses(value = {
@@ -131,8 +130,6 @@ public class UserController {
      * @return lista de usuarios con el rol especificado
      */
     @GetMapping("/role/{rol}")
-    @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'ADMINISTRADOR_VETERINARIA')")
-    @SecurityRequirement(name = "Bearer Authentication")
     @Operation(summary = "Obtener usuarios por rol", description = "Obtiene todos los usuarios con un rol específico. Solo disponible para administradores.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Usuarios encontrados",
@@ -199,8 +196,6 @@ public class UserController {
      * @return el usuario con estado actualizado
      */
     @PatchMapping("/{idUsuario}/state")
-    @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'ADMINISTRADOR_VETERINARIA')")
-    @SecurityRequirement(name = "Bearer Authentication")
     @Operation(summary = "Cambiar estado del usuario", description = "Cambia el estado (activo, inactivo, etc.) de un usuario. Solo disponible para administradores.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Estado del usuario actualizado exitosamente",
@@ -225,7 +220,6 @@ public class UserController {
      * @return respuesta sin contenido
      */
     @DeleteMapping("/{idUsuario}")
-    @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'ADMINISTRADOR_VETERINARIA')")
     @SecurityRequirement(name = "Bearer Authentication")
     @Operation(summary = "Eliminar usuario", description = "Elimina un usuario del sistema. Solo disponible para administradores.")
     @ApiResponses(value = {

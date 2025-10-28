@@ -1,5 +1,6 @@
 package huellitassoft_web.huellitasoft.service.impl;
 
+import huellitassoft_web.huellitasoft.dto.client.ClientResponseDTO;
 import huellitassoft_web.huellitasoft.dto.pet.PetCreateDTO;
 import huellitassoft_web.huellitasoft.dto.pet.PetResponseDTO;
 import huellitassoft_web.huellitasoft.dto.pet.PetUpdateDTO;
@@ -29,6 +30,19 @@ public class PetServiceImpl implements PetService {
     private final ClientRepository clientRepository;
     private final RaceRepository raceRepository;
 
+    private ClientResponseDTO mapToResponseDTO(Client client) {
+        return ClientResponseDTO.builder()
+                .idCliente(client.getIdCliente())
+                .nombres(client.getNombres())
+                .apellidos(client.getApellidos())
+                .documentoIdentidad(client.getDocumentoIdentidad())
+                .email(client.getEmail())
+                .telefono(client.getTelefono())
+                .direccion(client.getDireccion())
+                .estado(client.getEstado())
+                .idUsuario(client.getUsuario().getIdUsuario())
+                .build();
+    }
     private PetResponseDTO convertToDTO(Pet pet) {
         return PetResponseDTO.builder()
                 .idMascota(pet.getIdMascota())
@@ -40,6 +54,9 @@ public class PetServiceImpl implements PetService {
                 .idRaza(pet.getRaza().getIdRaza())
                 .nombreCliente(pet.getCliente().getNombres()+" "+pet.getCliente().getApellidos())
                 .nombreRaza(pet.getRaza().getNombre())
+                .clientResponseDTO(mapToResponseDTO(pet.getCliente()))
+                .idEspecie(pet.getRaza().getSpecie().getIdEspecie())
+                .nombreEspecie(pet.getRaza().getSpecie().getNombre())
                 .build();
     }
 
