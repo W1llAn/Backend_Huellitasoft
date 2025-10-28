@@ -55,6 +55,8 @@ public class PetServiceImpl implements PetService {
                 .nombreCliente(pet.getCliente().getNombres()+" "+pet.getCliente().getApellidos())
                 .nombreRaza(pet.getRaza().getNombre())
                 .clientResponseDTO(mapToResponseDTO(pet.getCliente()))
+                .idEspecie(pet.getRaza().getSpecie().getIdEspecie())
+                .nombreEspecie(pet.getRaza().getSpecie().getNombre())
                 .build();
     }
 
