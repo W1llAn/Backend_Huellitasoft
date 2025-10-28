@@ -27,5 +27,7 @@ public class PetResponseDTO {
     private Long idRaza;
     private String nombreCliente;
     private String nombreRaza;
+    private Long idEspecie;
+    private String nombreEspecie;
     private ClientResponseDTO clientResponseDTO;
 }
