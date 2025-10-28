@@ -1,5 +1,6 @@
 package huellitassoft_web.huellitasoft.dto.pet;
 
+import huellitassoft_web.huellitasoft.dto.client.ClientResponseDTO;
 import huellitassoft_web.huellitasoft.entity.Client;
 import huellitassoft_web.huellitasoft.entity.Race;
 import huellitassoft_web.huellitasoft.enums.Sex;
@@ -26,4 +27,5 @@ public class PetResponseDTO {
     private Long idRaza;
     private String nombreCliente;
     private String nombreRaza;
+    private ClientResponseDTO clientResponseDTO;
 }
