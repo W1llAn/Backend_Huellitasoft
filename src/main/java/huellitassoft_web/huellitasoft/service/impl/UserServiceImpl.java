@@ -146,6 +146,14 @@ public class UserServiceImpl implements UserService {
                 .estado(createDTO.getEstado())
                 .build();
 
+        // Si se proporciona creadoPorId, validar que el usuario exista
+        if (createDTO.getCreadoPorId() != null) {
+            User creadoPor = userRepository.findById(createDTO.getCreadoPorId())
+                    .orElseThrow(() -> new ResourceNotFoundException(USER_NOT_FOUND_BY_ID + createDTO.getCreadoPorId()));
+            user.setCreadoPor(creadoPor);
+            log.info("Usuario será creado por el usuario: {}", createDTO.getCreadoPorId());
+        }
+
         User savedUser = userRepository.save(user);
         log.info("Usuario creado exitosamente con ID: {} y email: {}", savedUser.getIdUsuario(), savedUser.getEmail());
         return convertToResponseDTO(savedUser);
@@ -184,6 +192,15 @@ public class UserServiceImpl implements UserService {
         user.setContrasena(passwordEncoder.encode(updateDTO.getContrasena()));
         user.setRol(updateDTO.getRol());
         user.setEstado(updateDTO.getEstado());
+
+        // Actualizar creadoPor si se proporciona
+        if (updateDTO.getCreadoPorId() != null) {
+            User creadoPor = userRepository.findById(updateDTO.getCreadoPorId())
+                    .orElseThrow(() -> new ResourceNotFoundException(USER_NOT_FOUND_BY_ID + updateDTO.getCreadoPorId()));
+            user.setCreadoPor(creadoPor);
+        } else {
+            user.setCreadoPor(null);
+        }
 
         User updatedUser = userRepository.save(user);
         log.info("Usuario actualizado exitosamente con ID: {}", idUsuario);
@@ -237,7 +254,7 @@ public class UserServiceImpl implements UserService {
      * @return el DTO UserResponseDTO
      */
     private UserResponseDTO convertToResponseDTO(User user) {
-        return UserResponseDTO.builder()
+        UserResponseDTO dto = UserResponseDTO.builder()
                 .idUsuario(user.getIdUsuario())
                 .email(user.getEmail())
                 .username(user.getUsername())
@@ -245,5 +262,59 @@ public class UserServiceImpl implements UserService {
                 .estado(user.getEstado())
                 .fechaCreacion(user.getFechaCreacion())
                 .build();
+
+        if (user.getCreadoPor() != null) {
+            dto.setCreadoPorId(user.getCreadoPor().getIdUsuario());
+            dto.setCreadoPorUsername(user.getCreadoPor().getUsername());
+        }
+
+        return dto;
+    }
+
+    /**
+     * Obtiene todos los usuarios creados por un usuario específico.
+     *
+     * @param creadoPorId el ID del usuario que creó otros usuarios
+     * @return lista de usuarios creados por el usuario especificado
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public List<UserResponseDTO> getUsersCreatedBy(Long creadoPorId) {
+        log.info("Obteniendo usuarios creados por el usuario: {}", creadoPorId);
+
+        // Verificar que el usuario creador existe
+        if (!userRepository.existsById(creadoPorId)) {
+            log.warn("Usuario creador no encontrado con ID: {}", creadoPorId);
+            throw new ResourceNotFoundException(USER_NOT_FOUND_BY_ID + creadoPorId);
+        }
+
+        return userRepository.findByCreadoPor_IdUsuario(creadoPorId)
+                .stream()
+                .map(this::convertToResponseDTO)
+                .toList();
+    }
+
+    /**
+     * Obtiene todos los usuarios con un rol específico creados por un usuario específico.
+     *
+     * @param creadoPorId el ID del usuario que creó otros usuarios
+     * @param rol el rol a buscar
+     * @return lista de usuarios con el rol especificado creados por el usuario
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public List<UserResponseDTO> getUsersCreatedByWithRole(Long creadoPorId, UserRol rol) {
+        log.info("Obteniendo usuarios con rol {} creados por el usuario: {}", rol, creadoPorId);
+
+        // Verificar que el usuario creador existe
+        if (!userRepository.existsById(creadoPorId)) {
+            log.warn("Usuario creador no encontrado con ID: {}", creadoPorId);
+            throw new ResourceNotFoundException(USER_NOT_FOUND_BY_ID + creadoPorId);
+        }
+
+        return userRepository.findByCreadoPor_IdUsuarioAndRol(creadoPorId, rol)
+                .stream()
+                .map(this::convertToResponseDTO)
+                .toList();
     }
 }
