@@ -1,6 +1,7 @@
 package huellitassoft_web.huellitasoft.exception;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -31,9 +32,9 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleResourceNotFoundException(
             ResourceNotFoundException ex, WebRequest request) {
-        
+
         log.error("Recurso no encontrado: {}", ex.getMessage());
-        
+
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .status(HttpStatus.NOT_FOUND.value())
                 .message(ex.getMessage())
@@ -50,9 +51,9 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ResourceAlreadyExistsException.class)
     public ResponseEntity<ErrorResponse> handleResourceAlreadyExistsException(
             ResourceAlreadyExistsException ex, WebRequest request) {
-        
+
         log.error("Recurso ya existe: {}", ex.getMessage());
-        
+
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .status(HttpStatus.CONFLICT.value())
                 .message(ex.getMessage())
@@ -69,9 +70,9 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> handleMethodArgumentNotValid(
             MethodArgumentNotValidException ex, WebRequest request) {
-        
+
         log.error("Error de validación: {}", ex.getMessage());
-        
+
         Map<String, String> errors = new HashMap<>();
         ex.getBindingResult().getAllErrors().forEach(error -> {
             String fieldName = ((FieldError) error).getField();
@@ -95,9 +96,9 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGlobalException(
             Exception ex, WebRequest request) {
-        
+
         log.error("Error no esperado: ", ex);
-        
+
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
                 .message("Error interno del servidor")
@@ -106,5 +107,40 @@ public class GlobalExceptionHandler {
                 .build();
 
         return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    /**
+     * Maneja violaciones de integridad de datos (Foreign Keys, Unique Constraints, etc.)
+     */
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ErrorResponse> handleDataIntegrityViolation(
+            DataIntegrityViolationException ex, WebRequest request) {
+
+        log.error("Violación de integridad de datos: {}", ex.getMessage());
+
+        String message = "No se puede completar la operación debido a restricciones de integridad";
+        String exceptionMessage = ex.getMessage() != null ? ex.getMessage().toLowerCase() : "";
+
+        // Detectar el tipo específico de violación
+        if (exceptionMessage.contains("fk_mascota_raza")) {
+            message = "No se puede eliminar la raza porque está asignada a una o más mascotas";
+        } else if (exceptionMessage.contains("fk_raza_especie")) {
+            message = "No se puede eliminar la especie porque tiene razas asociadas";
+        } else if (exceptionMessage.contains("fk_mascota_cliente")) {
+            message = "No se puede eliminar el cliente porque tiene mascotas registradas";
+        } else if (exceptionMessage.contains("foreign key")) {
+            message = "No se puede eliminar este registro porque está siendo utilizado por otros datos";
+        } else if (exceptionMessage.contains("unique constraint") || exceptionMessage.contains("duplicate key")) {
+            message = "Ya existe un registro con estos datos";
+        }
+
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .status(HttpStatus.CONFLICT.value())
+                .message(message)
+                .timestamp(LocalDateTime.now().format(formatter))
+                .path(request.getDescription(false).replace("uri=", ""))
+                .build();
+
+        return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
     }
 }
