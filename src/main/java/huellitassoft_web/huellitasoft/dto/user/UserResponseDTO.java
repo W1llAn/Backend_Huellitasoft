@@ -26,4 +26,6 @@ public class UserResponseDTO {
     private LocalDateTime fechaCreacion;
     private Long creadoPorId;
     private String creadoPorUsername;
+    private Long idSucursal;
+    private String sucursalNombre;
 }

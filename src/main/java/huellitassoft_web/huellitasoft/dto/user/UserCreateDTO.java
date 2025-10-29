@@ -38,4 +38,6 @@ public class UserCreateDTO {
     private UserState estado;
 
     private Long creadoPorId;
+
+    private Long idSucursal;
 }
