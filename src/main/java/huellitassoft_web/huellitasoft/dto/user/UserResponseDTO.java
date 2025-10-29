@@ -24,4 +24,6 @@ public class UserResponseDTO {
     private UserRol rol;
     private UserState estado;
     private LocalDateTime fechaCreacion;
+    private Long creadoPorId;
+    private String creadoPorUsername;
 }
