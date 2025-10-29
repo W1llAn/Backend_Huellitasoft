@@ -54,4 +54,29 @@ public interface UserRepository extends JpaRepository<User, Long> {
      * @return true si existe, false si no
      */
     boolean existsByUsername(String usuario);
+
+    /**
+     * Obtiene todos los usuarios creados por un usuario específico.
+     *
+     * @param creadoPor el usuario que creó otros usuarios
+     * @return Una lista de usuarios creados por el usuario especificado
+     */
+    List<User> findByCreadoPor(User creadoPor);
+
+    /**
+     * Obtiene todos los usuarios creados por un usuario específico usando su ID.
+     *
+     * @param creadoPorId el ID del usuario que creó otros usuarios
+     * @return Una lista de usuarios creados por el usuario especificado
+     */
+    List<User> findByCreadoPor_IdUsuario(Long creadoPorId);
+
+    /**
+     * Obtiene todos los usuarios con un rol específico creados por un usuario específico.
+     *
+     * @param creadoPorId el ID del usuario que creó otros usuarios
+     * @param rol el rol a buscar
+     * @return Una lista de usuarios con el rol especificado creados por el usuario
+     */
+    List<User> findByCreadoPor_IdUsuarioAndRol(Long creadoPorId, UserRol rol);
 }
