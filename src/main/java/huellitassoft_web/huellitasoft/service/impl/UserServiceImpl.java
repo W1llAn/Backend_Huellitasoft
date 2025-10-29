@@ -3,11 +3,13 @@ package huellitassoft_web.huellitasoft.service.impl;
 import huellitassoft_web.huellitasoft.dto.user.UserCreateDTO;
 import huellitassoft_web.huellitasoft.dto.user.UserResponseDTO;
 import huellitassoft_web.huellitasoft.entity.User;
+import huellitassoft_web.huellitasoft.entity.Subsidiary;
 import huellitassoft_web.huellitasoft.enums.UserRol;
 import huellitassoft_web.huellitasoft.enums.UserState;
 import huellitassoft_web.huellitasoft.exception.ResourceAlreadyExistsException;
 import huellitassoft_web.huellitasoft.exception.ResourceNotFoundException;
 import huellitassoft_web.huellitasoft.repository.UserRepository;
+import huellitassoft_web.huellitasoft.repository.SubsidiaryRepository;
 import huellitassoft_web.huellitasoft.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,8 +34,10 @@ public class UserServiceImpl implements UserService {
     private static final String USER_NOT_FOUND_BY_USUARIO = "Usuario no encontrado con nombre: ";
     private static final String USER_ALREADY_EXISTS_EMAIL = "Ya existe un usuario con el email: ";
     private static final String USER_ALREADY_EXISTS_USUARIO = "Ya existe un usuario con nombre: ";
+    private static final String SUBSIDIARY_NOT_FOUND = "Sucursal no encontrada con ID: ";
 
     private final UserRepository userRepository;
+    private final SubsidiaryRepository subsidiaryRepository;
     private final PasswordEncoder passwordEncoder;
 
     /**
@@ -154,6 +158,14 @@ public class UserServiceImpl implements UserService {
             log.info("Usuario será creado por el usuario: {}", createDTO.getCreadoPorId());
         }
 
+        // Si se proporciona idSucursal, validar que la sucursal exista
+        if (createDTO.getIdSucursal() != null) {
+            Subsidiary subsidiary = subsidiaryRepository.findById(createDTO.getIdSucursal())
+                    .orElseThrow(() -> new ResourceNotFoundException(SUBSIDIARY_NOT_FOUND + createDTO.getIdSucursal()));
+            user.setSucursal(subsidiary);
+            log.info("Usuario asociado a la sucursal: {}", createDTO.getIdSucursal());
+        }
+
         User savedUser = userRepository.save(user);
         log.info("Usuario creado exitosamente con ID: {} y email: {}", savedUser.getIdUsuario(), savedUser.getEmail());
         return convertToResponseDTO(savedUser);
@@ -200,6 +212,16 @@ public class UserServiceImpl implements UserService {
             user.setCreadoPor(creadoPor);
         } else {
             user.setCreadoPor(null);
+        }
+
+        // Actualizar sucursal si se proporciona
+        if (updateDTO.getIdSucursal() != null) {
+            Subsidiary subsidiary = subsidiaryRepository.findById(updateDTO.getIdSucursal())
+                    .orElseThrow(() -> new ResourceNotFoundException(SUBSIDIARY_NOT_FOUND + updateDTO.getIdSucursal()));
+            user.setSucursal(subsidiary);
+            log.info("Sucursal del usuario actualizada a: {}", updateDTO.getIdSucursal());
+        } else {
+            user.setSucursal(null);
         }
 
         User updatedUser = userRepository.save(user);
@@ -268,6 +290,11 @@ public class UserServiceImpl implements UserService {
             dto.setCreadoPorUsername(user.getCreadoPor().getUsername());
         }
 
+        if (user.getSucursal() != null) {
+            dto.setIdSucursal(user.getSucursal().getIdSubsidiary());
+            dto.setSucursalNombre(user.getSucursal().getName());
+        }
+
         return dto;
     }
 
@@ -313,6 +340,53 @@ public class UserServiceImpl implements UserService {
         }
 
         return userRepository.findByCreadoPor_IdUsuarioAndRol(creadoPorId, rol)
+                .stream()
+                .map(this::convertToResponseDTO)
+                .toList();
+    }
+
+    /**
+     * Obtiene todos los usuarios veterinarios de una sucursal específica.
+     *
+     * @param idSucursal el ID de la sucursal
+     * @return lista de usuarios veterinarios de la sucursal
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public List<UserResponseDTO> getUsersBySucursal(Long idSucursal) {
+        log.info("Obteniendo usuarios de la sucursal: {}", idSucursal);
+
+        // Verificar que la sucursal existe
+        if (!subsidiaryRepository.existsById(idSucursal)) {
+            log.warn("Sucursal no encontrada con ID: {}", idSucursal);
+            throw new ResourceNotFoundException(SUBSIDIARY_NOT_FOUND + idSucursal);
+        }
+
+        return userRepository.findBySucursal_IdSubsidiary(idSucursal)
+                .stream()
+                .map(this::convertToResponseDTO)
+                .toList();
+    }
+
+    /**
+     * Obtiene todos los usuarios veterinarios de una sucursal con un rol específico.
+     *
+     * @param idSucursal el ID de la sucursal
+     * @param rol el rol a buscar (VETERINARIO o ADMIN_VETERINARIA)
+     * @return lista de usuarios veterinarios de la sucursal con el rol especificado
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public List<UserResponseDTO> getUsersBySucursalAndRol(Long idSucursal, UserRol rol) {
+        log.info("Obteniendo usuarios con rol {} de la sucursal: {}", rol, idSucursal);
+
+        // Verificar que la sucursal existe
+        if (!subsidiaryRepository.existsById(idSucursal)) {
+            log.warn("Sucursal no encontrada con ID: {}", idSucursal);
+            throw new ResourceNotFoundException(SUBSIDIARY_NOT_FOUND + idSucursal);
+        }
+
+        return userRepository.findBySucursal_IdSubsidiaryAndRol(idSucursal, rol)
                 .stream()
                 .map(this::convertToResponseDTO)
                 .toList();

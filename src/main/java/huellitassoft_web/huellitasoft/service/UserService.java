@@ -101,5 +101,22 @@ public interface UserService {
      * @return lista de usuarios con el rol especificado creados por el usuario
      */
     List<UserResponseDTO> getUsersCreatedByWithRole(Long creadoPorId, UserRol rol);
+
+    /**
+     * Obtiene todos los usuarios veterinarios de una sucursal específica.
+     *
+     * @param idSucursal el ID de la sucursal
+     * @return lista de usuarios veterinarios de la sucursal
+     */
+    List<UserResponseDTO> getUsersBySucursal(Long idSucursal);
+
+    /**
+     * Obtiene todos los usuarios veterinarios de una sucursal con un rol específico.
+     *
+     * @param idSucursal el ID de la sucursal
+     * @param rol el rol a buscar (VETERINARIO o ADMIN_VETERINARIA)
+     * @return lista de usuarios veterinarios de la sucursal con el rol especificado
+     */
+    List<UserResponseDTO> getUsersBySucursalAndRol(Long idSucursal, UserRol rol);
 }
 
