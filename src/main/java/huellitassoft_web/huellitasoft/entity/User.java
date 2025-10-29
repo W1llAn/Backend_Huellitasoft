@@ -42,6 +42,14 @@ public class User {
     @Column(name = "fecha_creacion", nullable = false, updatable = false)
     private LocalDateTime fechaCreacion;
 
+    @ManyToOne(fetch = FetchType.LAZY, optional = true)
+    @JoinColumn(name = "creado_por", nullable = true)
+    private User creadoPor;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = true)
+    @JoinColumn(name = "id_sucursal", nullable = true)
+    private Subsidiary sucursal;
+
     @PrePersist
     protected void onCreate() {
         fechaCreacion = LocalDateTime.now();

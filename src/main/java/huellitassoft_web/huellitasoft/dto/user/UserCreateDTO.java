@@ -36,4 +36,8 @@ public class UserCreateDTO {
 
     @NotNull(message = "El estado es requerido")
     private UserState estado;
+
+    private Long creadoPorId;
+
+    private Long idSucursal;
 }

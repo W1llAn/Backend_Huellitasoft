@@ -84,5 +84,39 @@ public interface UserService {
      * @return el usuario con estado actualizado como DTO
      */
     UserResponseDTO changeUserState(Long idUsuario, UserState nuevoEstado);
+
+    /**
+     * Obtiene todos los usuarios creados por un usuario específico.
+     *
+     * @param creadoPorId el ID del usuario que creó otros usuarios
+     * @return lista de usuarios creados por el usuario especificado
+     */
+    List<UserResponseDTO> getUsersCreatedBy(Long creadoPorId);
+
+    /**
+     * Obtiene todos los usuarios con un rol específico creados por un usuario específico.
+     *
+     * @param creadoPorId el ID del usuario que creó otros usuarios
+     * @param rol el rol a buscar
+     * @return lista de usuarios con el rol especificado creados por el usuario
+     */
+    List<UserResponseDTO> getUsersCreatedByWithRole(Long creadoPorId, UserRol rol);
+
+    /**
+     * Obtiene todos los usuarios veterinarios de una sucursal específica.
+     *
+     * @param idSucursal el ID de la sucursal
+     * @return lista de usuarios veterinarios de la sucursal
+     */
+    List<UserResponseDTO> getUsersBySucursal(Long idSucursal);
+
+    /**
+     * Obtiene todos los usuarios veterinarios de una sucursal con un rol específico.
+     *
+     * @param idSucursal el ID de la sucursal
+     * @param rol el rol a buscar (VETERINARIO o ADMIN_VETERINARIA)
+     * @return lista de usuarios veterinarios de la sucursal con el rol especificado
+     */
+    List<UserResponseDTO> getUsersBySucursalAndRol(Long idSucursal, UserRol rol);
 }
 

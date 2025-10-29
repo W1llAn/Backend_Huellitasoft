@@ -13,4 +13,21 @@ public interface SubsidiaryService {
     List<SubsidiaryResponseDTO> getSubsidiariesByState(SubsidiaryState state);
     SubsidiaryResponseDTO updateSubsidiary(Long id, SubsidiaryRequestDTO requestDTO);
     void deleteSubsidiary(Long id);
+
+    /**
+     * Obtiene todas las sucursales gestionadas por un usuario específico.
+     *
+     * @param idUsuario el ID del usuario gestor
+     * @return lista de sucursales del usuario
+     */
+    List<SubsidiaryResponseDTO> getSubsidiariesByManager(Long idUsuario);
+
+    /**
+     * Obtiene las sucursales gestionadas por un usuario en un estado específico.
+     *
+     * @param idUsuario el ID del usuario gestor
+     * @param state el estado de la sucursal
+     * @return lista de sucursales filtradas
+     */
+    List<SubsidiaryResponseDTO> getSubsidiariesByManagerAndState(Long idUsuario, SubsidiaryState state);
 }

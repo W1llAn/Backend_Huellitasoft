@@ -54,4 +54,55 @@ public interface UserRepository extends JpaRepository<User, Long> {
      * @return true si existe, false si no
      */
     boolean existsByUsername(String usuario);
+
+    /**
+     * Obtiene todos los usuarios creados por un usuario específico.
+     *
+     * @param creadoPor el usuario que creó otros usuarios
+     * @return Una lista de usuarios creados por el usuario especificado
+     */
+    List<User> findByCreadoPor(User creadoPor);
+
+    /**
+     * Obtiene todos los usuarios creados por un usuario específico usando su ID.
+     *
+     * @param creadoPorId el ID del usuario que creó otros usuarios
+     * @return Una lista de usuarios creados por el usuario especificado
+     */
+    List<User> findByCreadoPor_IdUsuario(Long creadoPorId);
+
+    /**
+     * Obtiene todos los usuarios con un rol específico creados por un usuario específico.
+     *
+     * @param creadoPorId el ID del usuario que creó otros usuarios
+     * @param rol el rol a buscar
+     * @return Una lista de usuarios con el rol especificado creados por el usuario
+     */
+    List<User> findByCreadoPor_IdUsuarioAndRol(Long creadoPorId, UserRol rol);
+
+    /**
+     * Obtiene todos los usuarios asociados a una sucursal específica.
+     *
+     * @param idSucursal el ID de la sucursal
+     * @return Una lista de usuarios de la sucursal especificada
+     */
+    List<User> findBySucursal_IdSubsidiary(Long idSucursal);
+
+    /**
+     * Obtiene todos los usuarios veterinarios (VETERINARIO o ADMIN_VETERINARIA) de una sucursal.
+     *
+     * @param idSucursal el ID de la sucursal
+     * @param rol el rol a buscar (VETERINARIO o ADMIN_VETERINARIA)
+     * @return Una lista de usuarios veterinarios de la sucursal
+     */
+    List<User> findBySucursal_IdSubsidiaryAndRol(Long idSucursal, UserRol rol);
+
+    /**
+     * Verifica si existe un usuario con una sucursal específica.
+     *
+     * @param idUsuario el ID del usuario
+     * @param idSucursal el ID de la sucursal
+     * @return true si existe, false si no
+     */
+    boolean existsByIdUsuarioAndSucursal_IdSubsidiary(Long idUsuario, Long idSucursal);
 }

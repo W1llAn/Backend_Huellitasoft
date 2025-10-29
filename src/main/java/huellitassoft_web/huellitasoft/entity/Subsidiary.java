@@ -34,6 +34,10 @@ public class Subsidiary {
     @Column(name = "estado", nullable = false)
     private SubsidiaryState state;
 
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "id_usuario", nullable = false)
+    private User manager;
+
     @OneToMany(mappedBy = "subsidiary", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<SubsidiarySchedule> schedules = new ArrayList<>();
 }

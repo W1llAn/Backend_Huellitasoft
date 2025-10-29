@@ -32,6 +32,9 @@ public class SubsidiaryRequestDTO {
     @NotNull(message = "El estado es obligatorio")
     private SubsidiaryState state;
 
+    @NotNull(message = "El usuario gestor es obligatorio")
+    private Long idUsuario;
+
     @Valid
     private List<ScheduleRequestDTO> schedules;
 }

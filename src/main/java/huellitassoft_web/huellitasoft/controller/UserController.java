@@ -16,7 +16,6 @@ import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -213,6 +212,53 @@ public class UserController {
     }
 
     /**
+     * Obtiene todos los usuarios creados por un usuario específico.
+     * Útil para administrador_veterinaria ver los veterinarios que ha creado.
+     *
+     * @param creadoPorId el ID del usuario que creó otros usuarios
+     * @return lista de usuarios creados por el usuario especificado
+     */
+    @GetMapping("/creados-por/{creadoPorId}")
+    @SecurityRequirement(name = "Bearer Authentication")
+    @Operation(summary = "Obtener usuarios creados por un administrador", description = "Obtiene todos los usuarios que fueron creados por un usuario específico (típicamente un ADMINISTRADOR_VETERINARIA).")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Usuarios encontrados",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = UserResponseDTO.class))),
+            @ApiResponse(responseCode = "404", description = "Usuario creador no encontrado"),
+            @ApiResponse(responseCode = "401", description = "No autenticado")
+    })
+    public ResponseEntity<List<UserResponseDTO>> getUsersCreatedBy(@PathVariable Long creadoPorId) {
+        log.info("GET /api/users/creados-por/{} - Obteniendo usuarios creados por", creadoPorId);
+        List<UserResponseDTO> users = userService.getUsersCreatedBy(creadoPorId);
+        return ResponseEntity.ok(users);
+    }
+
+    /**
+     * Obtiene todos los usuarios con un rol específico creados por un usuario específico.
+     * Útil para administrador_veterinaria ver solo los veterinarios que ha creado.
+     *
+     * @param creadoPorId el ID del usuario que creó otros usuarios
+     * @param rol el rol a filtrar
+     * @return lista de usuarios con el rol especificado creados por el usuario
+     */
+    @GetMapping("/creados-por/{creadoPorId}/role/{rol}")
+    @SecurityRequirement(name = "Bearer Authentication")
+    @Operation(summary = "Obtener usuarios creados por un administrador con rol específico", description = "Obtiene todos los usuarios con un rol específico que fueron creados por un usuario específico.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Usuarios encontrados",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = UserResponseDTO.class))),
+            @ApiResponse(responseCode = "404", description = "Usuario creador no encontrado"),
+            @ApiResponse(responseCode = "401", description = "No autenticado")
+    })
+    public ResponseEntity<List<UserResponseDTO>> getUsersCreatedByWithRole(
+            @PathVariable Long creadoPorId,
+            @PathVariable UserRol rol) {
+        log.info("GET /api/users/creados-por/{}/role/{} - Obteniendo usuarios con rol {} creados por", creadoPorId, rol, rol);
+        List<UserResponseDTO> users = userService.getUsersCreatedByWithRole(creadoPorId, rol);
+        return ResponseEntity.ok(users);
+    }
+
+    /**
      * Elimina un usuario.
      * Solo accesible para administradores (ADMINISTRADOR o ADMINISTRADOR_VETERINARIA).
      *
@@ -232,5 +278,52 @@ public class UserController {
         log.info("DELETE /api/users/{} - Eliminando usuario", idUsuario);
         userService.deleteUser(idUsuario);
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Obtiene todos los usuarios de una sucursal específica.
+     * Solo accesible para administradores y usuarios de esa sucursal.
+     *
+     * @param idSucursal el ID de la sucursal
+     * @return lista de usuarios de la sucursal
+     */
+    @GetMapping("/sucursal/{idSucursal}")
+    @SecurityRequirement(name = "Bearer Authentication")
+    @Operation(summary = "Obtener usuarios por sucursal", description = "Obtiene todos los usuarios veterinarios asociados a una sucursal específica.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Lista de usuarios obtenida exitosamente",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = UserResponseDTO.class))),
+            @ApiResponse(responseCode = "404", description = "Sucursal no encontrada"),
+            @ApiResponse(responseCode = "401", description = "No autenticado")
+    })
+    public ResponseEntity<List<UserResponseDTO>> getUsersBySucursal(@PathVariable Long idSucursal) {
+        log.info("GET /api/users/sucursal/{} - Obteniendo usuarios de la sucursal", idSucursal);
+        List<UserResponseDTO> users = userService.getUsersBySucursal(idSucursal);
+        return ResponseEntity.ok(users);
+    }
+
+    /**
+     * Obtiene todos los usuarios de una sucursal con un rol específico.
+     * Solo accesible para administradores.
+     *
+     * @param idSucursal el ID de la sucursal
+     * @param rol el rol a filtrar
+     * @return lista de usuarios de la sucursal con el rol especificado
+     */
+    @GetMapping("/sucursal/{idSucursal}/rol/{rol}")
+    @SecurityRequirement(name = "Bearer Authentication")
+    @Operation(summary = "Obtener usuarios por sucursal y rol", description = "Obtiene todos los usuarios de una sucursal con un rol específico.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Lista de usuarios obtenida exitosamente",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = UserResponseDTO.class))),
+            @ApiResponse(responseCode = "404", description = "Sucursal no encontrada"),
+            @ApiResponse(responseCode = "401", description = "No autenticado")
+    })
+    public ResponseEntity<List<UserResponseDTO>> getUsersBySucursalAndRol(
+            @PathVariable Long idSucursal,
+            @PathVariable UserRol rol) {
+        log.info("GET /api/users/sucursal/{}/rol/{} - Obteniendo usuarios de la sucursal con rol", idSucursal, rol);
+        List<UserResponseDTO> users = userService.getUsersBySucursalAndRol(idSucursal, rol);
+        return ResponseEntity.ok(users);
     }
 }

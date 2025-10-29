@@ -48,6 +48,20 @@ public class SubsidiaryController {
         return ResponseEntity.ok(subsidiaryService.getSubsidiariesByState(state));
     }
 
+    @GetMapping("/manager/{idUsuario}")
+    @Operation(summary = "Obtener sucursales por gestor", description = "Obtiene todas las sucursales gestionadas por un usuario específico")
+    public ResponseEntity<List<SubsidiaryResponseDTO>> getSubsidiariesByManager(@PathVariable Long idUsuario) {
+        return ResponseEntity.ok(subsidiaryService.getSubsidiariesByManager(idUsuario));
+    }
+
+    @GetMapping("/manager/{idUsuario}/state/{state}")
+    @Operation(summary = "Obtener sucursales por gestor y estado", description = "Obtiene sucursales de un gestor específico filtradas por estado")
+    public ResponseEntity<List<SubsidiaryResponseDTO>> getSubsidiariesByManagerAndState(
+            @PathVariable Long idUsuario,
+            @PathVariable SubsidiaryState state) {
+        return ResponseEntity.ok(subsidiaryService.getSubsidiariesByManagerAndState(idUsuario, state));
+    }
+
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ROLE_ADMINISTRADOR')")
     @Operation(summary = "Actualizar sucursal", description = "Actualiza los datos de una sucursal y sus horarios")
