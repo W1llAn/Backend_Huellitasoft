@@ -17,5 +17,8 @@ public class SubsidiaryResponseDTO {
     private String address;
     private String contractedPlan;
     private SubsidiaryState state;
+    private Long idUsuario;
+    private String usuarioUsername;
+    private String usuarioEmail;
     private List<ScheduleResponseDTO> schedules;
 }
