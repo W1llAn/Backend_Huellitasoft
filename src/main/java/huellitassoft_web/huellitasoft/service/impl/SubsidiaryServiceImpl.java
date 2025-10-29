@@ -6,11 +6,13 @@ import huellitassoft_web.huellitasoft.dto.Subsidiary.SubsidiaryRequestDTO;
 import huellitassoft_web.huellitasoft.dto.Subsidiary.SubsidiaryResponseDTO;
 import huellitassoft_web.huellitasoft.entity.Subsidiary;
 import huellitassoft_web.huellitasoft.entity.SubsidiarySchedule;
+import huellitassoft_web.huellitasoft.entity.User;
 import huellitassoft_web.huellitasoft.enums.SubsidiaryState;
 import huellitassoft_web.huellitasoft.exception.ResourceAlreadyExistsException;
 import huellitassoft_web.huellitasoft.exception.ResourceNotFoundException;
 import huellitassoft_web.huellitasoft.repository.SubsidiaryRepository;
 import huellitassoft_web.huellitasoft.repository.SubsidiaryScheduleRepository;
+import huellitassoft_web.huellitasoft.repository.UserRepository;
 import huellitassoft_web.huellitasoft.service.SubsidiaryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -26,6 +28,7 @@ public class SubsidiaryServiceImpl implements SubsidiaryService {
 
     private final SubsidiaryRepository subsidiaryRepository;
     private final SubsidiaryScheduleRepository scheduleRepository;
+    private final UserRepository userRepository;
 
     @Override
     @Transactional
@@ -42,7 +45,7 @@ public class SubsidiaryServiceImpl implements SubsidiaryService {
         if (requestDTO.getSchedules() != null && !requestDTO.getSchedules().isEmpty()) {
             List<SubsidiarySchedule> schedules = requestDTO.getSchedules().stream()
                     .map(scheduleDTO -> mapScheduleToEntity(scheduleDTO, savedSubsidiary))
-                    .collect(Collectors.toList());
+                    .toList();
             schedules = scheduleRepository.saveAll(schedules);
             savedSubsidiary.setSchedules(schedules);
         }
@@ -62,7 +65,7 @@ public class SubsidiaryServiceImpl implements SubsidiaryService {
     public List<SubsidiaryResponseDTO> getAllSubsidiaries() {
         return subsidiaryRepository.findAll().stream()
                 .map(this::mapToResponseDTO)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
@@ -70,7 +73,7 @@ public class SubsidiaryServiceImpl implements SubsidiaryService {
     public List<SubsidiaryResponseDTO> getSubsidiariesByState(SubsidiaryState state) {
         return subsidiaryRepository.findByState(state).stream()
                 .map(this::mapToResponseDTO)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
@@ -140,11 +143,16 @@ public class SubsidiaryServiceImpl implements SubsidiaryService {
     }
 
     private Subsidiary mapToEntity(SubsidiaryRequestDTO dto) {
+        // Validar que el usuario existe
+        User manager = userRepository.findById(dto.getIdUsuario())
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con ID: " + dto.getIdUsuario()));
+
         Subsidiary subsidiary = new Subsidiary();
         subsidiary.setName(dto.getName());
         subsidiary.setAddress(dto.getAddress());
         subsidiary.setContractedPlan(dto.getContractedPlan());
         subsidiary.setState(dto.getState());
+        subsidiary.setManager(manager);
         return subsidiary;
     }
 
@@ -153,6 +161,13 @@ public class SubsidiaryServiceImpl implements SubsidiaryService {
         subsidiary.setAddress(dto.getAddress());
         subsidiary.setContractedPlan(dto.getContractedPlan());
         subsidiary.setState(dto.getState());
+
+        // Actualizar usuario si se proporciona
+        if (dto.getIdUsuario() != null) {
+            User manager = userRepository.findById(dto.getIdUsuario())
+                    .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con ID: " + dto.getIdUsuario()));
+            subsidiary.setManager(manager);
+        }
     }
 
     private SubsidiarySchedule mapScheduleToEntity(ScheduleRequestDTO dto, Subsidiary subsidiary) {
@@ -176,10 +191,17 @@ public class SubsidiaryServiceImpl implements SubsidiaryService {
         dto.setContractedPlan(subsidiary.getContractedPlan());
         dto.setState(subsidiary.getState());
 
+        // Incluir información del usuario gestor
+        if (subsidiary.getManager() != null) {
+            dto.setIdUsuario(subsidiary.getManager().getIdUsuario());
+            dto.setUsuarioUsername(subsidiary.getManager().getUsername());
+            dto.setUsuarioEmail(subsidiary.getManager().getEmail());
+        }
+
         if (subsidiary.getSchedules() != null) {
             List<ScheduleResponseDTO> schedules = subsidiary.getSchedules().stream()
                     .map(this::mapScheduleToResponseDTO)
-                    .collect(Collectors.toList());
+                    .toList();
             dto.setSchedules(schedules);
         }
 
@@ -197,5 +219,31 @@ public class SubsidiaryServiceImpl implements SubsidiaryService {
         dto.setEndTime(schedule.getEndTime());
         dto.setIsOpen(schedule.getIsOpen());
         return dto;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<SubsidiaryResponseDTO> getSubsidiariesByManager(Long idUsuario) {
+        // Validar que el usuario existe
+        if (!userRepository.existsById(idUsuario)) {
+            throw new ResourceNotFoundException("Usuario no encontrado con ID: " + idUsuario);
+        }
+
+        return subsidiaryRepository.findByManager_IdUsuario(idUsuario).stream()
+                .map(this::mapToResponseDTO)
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<SubsidiaryResponseDTO> getSubsidiariesByManagerAndState(Long idUsuario, SubsidiaryState state) {
+        // Validar que el usuario existe
+        if (!userRepository.existsById(idUsuario)) {
+            throw new ResourceNotFoundException("Usuario no encontrado con ID: " + idUsuario);
+        }
+
+        return subsidiaryRepository.findByManager_IdUsuarioAndState(idUsuario, state).stream()
+                .map(this::mapToResponseDTO)
+                .toList();
     }
 }
