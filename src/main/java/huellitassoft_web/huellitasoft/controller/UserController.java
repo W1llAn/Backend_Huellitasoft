@@ -279,4 +279,51 @@ public class UserController {
         userService.deleteUser(idUsuario);
         return ResponseEntity.noContent().build();
     }
+
+    /**
+     * Obtiene todos los usuarios de una sucursal específica.
+     * Solo accesible para administradores y usuarios de esa sucursal.
+     *
+     * @param idSucursal el ID de la sucursal
+     * @return lista de usuarios de la sucursal
+     */
+    @GetMapping("/sucursal/{idSucursal}")
+    @SecurityRequirement(name = "Bearer Authentication")
+    @Operation(summary = "Obtener usuarios por sucursal", description = "Obtiene todos los usuarios veterinarios asociados a una sucursal específica.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Lista de usuarios obtenida exitosamente",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = UserResponseDTO.class))),
+            @ApiResponse(responseCode = "404", description = "Sucursal no encontrada"),
+            @ApiResponse(responseCode = "401", description = "No autenticado")
+    })
+    public ResponseEntity<List<UserResponseDTO>> getUsersBySucursal(@PathVariable Long idSucursal) {
+        log.info("GET /api/users/sucursal/{} - Obteniendo usuarios de la sucursal", idSucursal);
+        List<UserResponseDTO> users = userService.getUsersBySucursal(idSucursal);
+        return ResponseEntity.ok(users);
+    }
+
+    /**
+     * Obtiene todos los usuarios de una sucursal con un rol específico.
+     * Solo accesible para administradores.
+     *
+     * @param idSucursal el ID de la sucursal
+     * @param rol el rol a filtrar
+     * @return lista de usuarios de la sucursal con el rol especificado
+     */
+    @GetMapping("/sucursal/{idSucursal}/rol/{rol}")
+    @SecurityRequirement(name = "Bearer Authentication")
+    @Operation(summary = "Obtener usuarios por sucursal y rol", description = "Obtiene todos los usuarios de una sucursal con un rol específico.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Lista de usuarios obtenida exitosamente",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = UserResponseDTO.class))),
+            @ApiResponse(responseCode = "404", description = "Sucursal no encontrada"),
+            @ApiResponse(responseCode = "401", description = "No autenticado")
+    })
+    public ResponseEntity<List<UserResponseDTO>> getUsersBySucursalAndRol(
+            @PathVariable Long idSucursal,
+            @PathVariable UserRol rol) {
+        log.info("GET /api/users/sucursal/{}/rol/{} - Obteniendo usuarios de la sucursal con rol", idSucursal, rol);
+        List<UserResponseDTO> users = userService.getUsersBySucursalAndRol(idSucursal, rol);
+        return ResponseEntity.ok(users);
+    }
 }
