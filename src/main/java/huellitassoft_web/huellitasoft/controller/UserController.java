@@ -16,7 +16,6 @@ import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -210,6 +209,53 @@ public class UserController {
         log.info("PATCH /api/users/{}/state - Cambiando estado del usuario a {}", idUsuario, nuevoEstado);
         UserResponseDTO user = userService.changeUserState(idUsuario, nuevoEstado);
         return ResponseEntity.ok(user);
+    }
+
+    /**
+     * Obtiene todos los usuarios creados por un usuario específico.
+     * Útil para administrador_veterinaria ver los veterinarios que ha creado.
+     *
+     * @param creadoPorId el ID del usuario que creó otros usuarios
+     * @return lista de usuarios creados por el usuario especificado
+     */
+    @GetMapping("/creados-por/{creadoPorId}")
+    @SecurityRequirement(name = "Bearer Authentication")
+    @Operation(summary = "Obtener usuarios creados por un administrador", description = "Obtiene todos los usuarios que fueron creados por un usuario específico (típicamente un ADMINISTRADOR_VETERINARIA).")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Usuarios encontrados",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = UserResponseDTO.class))),
+            @ApiResponse(responseCode = "404", description = "Usuario creador no encontrado"),
+            @ApiResponse(responseCode = "401", description = "No autenticado")
+    })
+    public ResponseEntity<List<UserResponseDTO>> getUsersCreatedBy(@PathVariable Long creadoPorId) {
+        log.info("GET /api/users/creados-por/{} - Obteniendo usuarios creados por", creadoPorId);
+        List<UserResponseDTO> users = userService.getUsersCreatedBy(creadoPorId);
+        return ResponseEntity.ok(users);
+    }
+
+    /**
+     * Obtiene todos los usuarios con un rol específico creados por un usuario específico.
+     * Útil para administrador_veterinaria ver solo los veterinarios que ha creado.
+     *
+     * @param creadoPorId el ID del usuario que creó otros usuarios
+     * @param rol el rol a filtrar
+     * @return lista de usuarios con el rol especificado creados por el usuario
+     */
+    @GetMapping("/creados-por/{creadoPorId}/role/{rol}")
+    @SecurityRequirement(name = "Bearer Authentication")
+    @Operation(summary = "Obtener usuarios creados por un administrador con rol específico", description = "Obtiene todos los usuarios con un rol específico que fueron creados por un usuario específico.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Usuarios encontrados",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = UserResponseDTO.class))),
+            @ApiResponse(responseCode = "404", description = "Usuario creador no encontrado"),
+            @ApiResponse(responseCode = "401", description = "No autenticado")
+    })
+    public ResponseEntity<List<UserResponseDTO>> getUsersCreatedByWithRole(
+            @PathVariable Long creadoPorId,
+            @PathVariable UserRol rol) {
+        log.info("GET /api/users/creados-por/{}/role/{} - Obteniendo usuarios con rol {} creados por", creadoPorId, rol, rol);
+        List<UserResponseDTO> users = userService.getUsersCreatedByWithRole(creadoPorId, rol);
+        return ResponseEntity.ok(users);
     }
 
     /**
