@@ -1,6 +1,7 @@
 package huellitassoft_web.huellitasoft.service.impl;
 
 import huellitassoft_web.huellitasoft.dto.user.UserCreateDTO;
+import huellitassoft_web.huellitasoft.dto.user.UserUpdateDTO;
 import huellitassoft_web.huellitasoft.dto.user.UserResponseDTO;
 import huellitassoft_web.huellitasoft.entity.User;
 import huellitassoft_web.huellitasoft.entity.Subsidiary;
@@ -181,7 +182,7 @@ public class UserServiceImpl implements UserService {
      * @throws ResourceAlreadyExistsException si el email o usuario ya existe en otro usuario
      */
     @Override
-    public UserResponseDTO updateUser(Long idUsuario, UserCreateDTO updateDTO) {
+    public UserResponseDTO updateUser(Long idUsuario, UserUpdateDTO updateDTO) {
         log.info("Actualizando usuario con ID: {}", idUsuario);
 
         User user = userRepository.findById(idUsuario)
@@ -201,7 +202,13 @@ public class UserServiceImpl implements UserService {
 
         user.setEmail(updateDTO.getEmail());
         user.setUsername(updateDTO.getUsername());
-        user.setContrasena(passwordEncoder.encode(updateDTO.getContrasena()));
+        
+        // Solo actualizar contraseña si se proporciona
+        if (updateDTO.getContrasena() != null && !updateDTO.getContrasena().isBlank()) {
+            user.setContrasena(passwordEncoder.encode(updateDTO.getContrasena()));
+            log.info("Contraseña del usuario actualizada");
+        }
+        
         user.setRol(updateDTO.getRol());
         user.setEstado(updateDTO.getEstado());
 
