@@ -24,7 +24,6 @@ public class SubsidiaryController {
     private final SubsidiaryService subsidiaryService;
 
     @PostMapping
-    @PreAuthorize("hasRole('ROLE_ADMINISTRADOR')")
     @Operation(summary = "Crear sucursal", description = "Crea una nueva sucursal con sus horarios de atención")
     public ResponseEntity<SubsidiaryResponseDTO> createSubsidiary(@Valid @RequestBody SubsidiaryRequestDTO requestDTO) {
         return new ResponseEntity<>(subsidiaryService.createSubsidiary(requestDTO), HttpStatus.CREATED);
@@ -63,7 +62,6 @@ public class SubsidiaryController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ROLE_ADMINISTRADOR')")
     @Operation(summary = "Actualizar sucursal", description = "Actualiza los datos de una sucursal y sus horarios")
     public ResponseEntity<SubsidiaryResponseDTO> updateSubsidiary(
             @PathVariable Long id,
@@ -72,7 +70,6 @@ public class SubsidiaryController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ROLE_ADMINISTRADOR')")
     @Operation(summary = "Eliminar sucursal", description = "Elimina una sucursal y todos sus horarios asociados")
     public ResponseEntity<Void> deleteSubsidiary(@PathVariable Long id) {
         subsidiaryService.deleteSubsidiary(id);
