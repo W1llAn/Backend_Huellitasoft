@@ -1,6 +1,7 @@
 package huellitassoft_web.huellitasoft.controller;
 
 import huellitassoft_web.huellitasoft.dto.user.UserCreateDTO;
+import huellitassoft_web.huellitasoft.dto.user.UserUpdateDTO;
 import huellitassoft_web.huellitasoft.dto.user.UserResponseDTO;
 import huellitassoft_web.huellitasoft.enums.UserRol;
 import huellitassoft_web.huellitasoft.enums.UserState;
@@ -171,7 +172,7 @@ public class UserController {
      */
     @PutMapping("/{idUsuario}")
     @SecurityRequirement(name = "Bearer Authentication")
-    @Operation(summary = "Actualizar usuario", description = "Actualiza los datos de un usuario existente.")
+    @Operation(summary = "Actualizar usuario", description = "Actualiza los datos de un usuario existente. La contraseña es opcional.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Usuario actualizado exitosamente",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = UserResponseDTO.class))),
@@ -180,7 +181,7 @@ public class UserController {
             @ApiResponse(responseCode = "409", description = "El email o usuario ya existe"),
             @ApiResponse(responseCode = "401", description = "No autenticado")
     })
-    public ResponseEntity<UserResponseDTO> updateUser(@PathVariable Long idUsuario, @Valid @RequestBody UserCreateDTO updateDTO) {
+    public ResponseEntity<UserResponseDTO> updateUser(@PathVariable Long idUsuario, @Valid @RequestBody UserUpdateDTO updateDTO) {
         log.info("PUT /api/users/{} - Actualizando usuario", idUsuario);
         UserResponseDTO user = userService.updateUser(idUsuario, updateDTO);
         return ResponseEntity.ok(user);
