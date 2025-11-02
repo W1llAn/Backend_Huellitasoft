@@ -1,6 +1,7 @@
 package huellitassoft_web.huellitasoft.service;
 
 import huellitassoft_web.huellitasoft.dto.user.UserCreateDTO;
+import huellitassoft_web.huellitasoft.dto.user.UserUpdateDTO;
 import huellitassoft_web.huellitasoft.dto.user.UserResponseDTO;
 import huellitassoft_web.huellitasoft.enums.UserRol;
 import huellitassoft_web.huellitasoft.enums.UserState;
@@ -67,7 +68,7 @@ public interface UserService {
      * @param updateDTO DTO con los datos a actualizar
      * @return el usuario actualizado como DTO
      */
-    UserResponseDTO updateUser(Long idUsuario, UserCreateDTO updateDTO);
+    UserResponseDTO updateUser(Long idUsuario, UserUpdateDTO updateDTO);
 
     /**
      * Elimina un usuario.
