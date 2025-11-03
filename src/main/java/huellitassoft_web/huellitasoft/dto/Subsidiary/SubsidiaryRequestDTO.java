@@ -25,9 +25,6 @@ public class SubsidiaryRequestDTO {
     @Size(max = 255, message = "La dirección no debe exceder 255 caracteres")
     private String address;
 
-    @NotBlank(message = "El plan contratado es obligatorio")
-    @Size(max = 100, message = "El plan contratado no debe exceder 100 caracteres")
-    private String contractedPlan;
 
     @NotNull(message = "El estado es obligatorio")
     private SubsidiaryState state;
