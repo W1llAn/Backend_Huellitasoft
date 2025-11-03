@@ -42,6 +42,9 @@ public class User {
     @Column(name = "fecha_creacion", nullable = false, updatable = false)
     private LocalDateTime fechaCreacion;
 
+    @Column(name = "plan_contratado")
+    private String planContratado;
+
     @ManyToOne(fetch = FetchType.LAZY, optional = true)
     @JoinColumn(name = "creado_por", nullable = true)
     private User creadoPor;

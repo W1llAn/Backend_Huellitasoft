@@ -15,7 +15,6 @@ public class SubsidiaryResponseDTO {
     private Long idSubsidiary;
     private String name;
     private String address;
-    private String contractedPlan;
     private SubsidiaryState state;
     private Long idUsuario;
     private String usuarioUsername;

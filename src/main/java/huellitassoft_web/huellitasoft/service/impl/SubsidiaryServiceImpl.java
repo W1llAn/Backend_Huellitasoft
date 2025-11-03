@@ -150,7 +150,6 @@ public class SubsidiaryServiceImpl implements SubsidiaryService {
         Subsidiary subsidiary = new Subsidiary();
         subsidiary.setName(dto.getName());
         subsidiary.setAddress(dto.getAddress());
-        subsidiary.setContractedPlan(dto.getContractedPlan());
         subsidiary.setState(dto.getState());
         subsidiary.setManager(manager);
         return subsidiary;
@@ -159,7 +158,6 @@ public class SubsidiaryServiceImpl implements SubsidiaryService {
     private void updateSubsidiaryFields(Subsidiary subsidiary, SubsidiaryRequestDTO dto) {
         subsidiary.setName(dto.getName());
         subsidiary.setAddress(dto.getAddress());
-        subsidiary.setContractedPlan(dto.getContractedPlan());
         subsidiary.setState(dto.getState());
 
         // Actualizar usuario si se proporciona
@@ -188,7 +186,6 @@ public class SubsidiaryServiceImpl implements SubsidiaryService {
         dto.setIdSubsidiary(subsidiary.getIdSubsidiary());
         dto.setName(subsidiary.getName());
         dto.setAddress(subsidiary.getAddress());
-        dto.setContractedPlan(subsidiary.getContractedPlan());
         dto.setState(subsidiary.getState());
 
         // Incluir información del usuario gestor

@@ -27,9 +27,6 @@ public class Subsidiary {
     @Column(name = "direccion", nullable = false, length = 255)
     private String address;
 
-    @Column(name = "plan_contratado", nullable = false, length = 100)
-    private String contractedPlan;
-
     @Enumerated(EnumType.STRING)
     @Column(name = "estado", nullable = false)
     private SubsidiaryState state;
