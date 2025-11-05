@@ -40,6 +40,7 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final SubsidiaryRepository subsidiaryRepository;
     private final PasswordEncoder passwordEncoder;
+    private final EmailService emailService;
 
     /**
      * Obtiene todos los usuarios.
@@ -142,7 +143,8 @@ public class UserServiceImpl implements UserService {
             log.warn("Intento de crear usuario con nombre duplicado: {}", createDTO.getUsername());
             throw new ResourceAlreadyExistsException(USER_ALREADY_EXISTS_USUARIO + createDTO.getUsername());
         }
-
+        String rawPassword = createDTO.getContrasena();
+        String rolCliente = String.valueOf(createDTO.getRol());
         User user = User.builder()
                 .email(createDTO.getEmail())
                 .username(createDTO.getUsername())
@@ -169,6 +171,41 @@ public class UserServiceImpl implements UserService {
 
         User savedUser = userRepository.save(user);
         log.info("Usuario creado exitosamente con ID: {} y email: {}", savedUser.getIdUsuario(), savedUser.getEmail());
+        if (rolCliente.equals("ROLE_CLIENTE")) {
+            try {
+                if (savedUser.getEmail() != null && rawPassword != null) {
+                    String asunto = "Creación de cuenta HuellitaSoft";
+                    String titulo = "Cuenta creada exitosamente";
+                    String mensaje = String.format("""
+                            Estimado(a) %s,
+                            
+                            Nos complace informarle que su cuenta en el sistema de gestión veterinaria HuellitaSoft ha sido creada correctamente.
+                            
+                            A continuación, se detallan sus credenciales de acceso:
+                            
+                            • Usuario: %s
+                            • Contraseña temporal: %s
+                            
+                            Por motivos de seguridad, le recomendamos cambiar su contraseña al iniciar sesión por primera vez.
+                            
+                            Si usted no solicitó esta cuenta, por favor ignore este mensaje.
+                            
+                            Atentamente,
+                            El equipo de HuellitaSoft
+                            """, savedUser.getUsername(), savedUser.getUsername(), rawPassword);
+
+                    emailService.sendNotificationEmail(
+                            savedUser.getEmail(),
+                            titulo,
+                            asunto,
+                            mensaje
+                    );
+                }
+            } catch (Exception e) {
+                log.error("Error al enviar las credenciales al usuario {}: {}", savedUser.getIdUsuario(), e.getMessage());
+            }
+        }
+
         return convertToResponseDTO(savedUser);
     }
 
@@ -178,7 +215,7 @@ public class UserServiceImpl implements UserService {
      * @param idUsuario el ID del usuario a actualizar
      * @param updateDTO DTO con los datos a actualizar
      * @return el usuario actualizado como DTO
-     * @throws ResourceNotFoundException si el usuario no existe
+     * @throws ResourceNotFoundException      si el usuario no existe
      * @throws ResourceAlreadyExistsException si el email o usuario ya existe en otro usuario
      */
     @Override
@@ -202,13 +239,13 @@ public class UserServiceImpl implements UserService {
 
         user.setEmail(updateDTO.getEmail());
         user.setUsername(updateDTO.getUsername());
-        
+
         // Solo actualizar contraseña si se proporciona
         if (updateDTO.getContrasena() != null && !updateDTO.getContrasena().isBlank()) {
             user.setContrasena(passwordEncoder.encode(updateDTO.getContrasena()));
             log.info("Contraseña del usuario actualizada");
         }
-        
+
         user.setRol(updateDTO.getRol());
         user.setEstado(updateDTO.getEstado());
 
@@ -258,7 +295,7 @@ public class UserServiceImpl implements UserService {
     /**
      * Cambia el estado de un usuario.
      *
-     * @param idUsuario el ID del usuario
+     * @param idUsuario   el ID del usuario
      * @param nuevoEstado el nuevo estado
      * @return el usuario con estado actualizado como DTO
      * @throws ResourceNotFoundException si el usuario no existe
@@ -332,7 +369,7 @@ public class UserServiceImpl implements UserService {
      * Obtiene todos los usuarios con un rol específico creados por un usuario específico.
      *
      * @param creadoPorId el ID del usuario que creó otros usuarios
-     * @param rol el rol a buscar
+     * @param rol         el rol a buscar
      * @return lista de usuarios con el rol especificado creados por el usuario
      */
     @Override
@@ -379,7 +416,7 @@ public class UserServiceImpl implements UserService {
      * Obtiene todos los usuarios veterinarios de una sucursal con un rol específico.
      *
      * @param idSucursal el ID de la sucursal
-     * @param rol el rol a buscar (VETERINARIO o ADMIN_VETERINARIA)
+     * @param rol        el rol a buscar (VETERINARIO o ADMIN_VETERINARIA)
      * @return lista de usuarios veterinarios de la sucursal con el rol especificado
      */
     @Override
