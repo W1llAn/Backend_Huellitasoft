@@ -13,25 +13,38 @@ import lombok.NoArgsConstructor;
 @Builder
 @Data
 public class Treatment {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_tratamiento")
-    private Long idTratamiento;
+    private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_consulta", nullable = false)
     private Consultation consultation;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "id_mascota", nullable = false)
-    private Pet mascota;
+    @Column(name = "descripcion", length = 500)
+    private String description;
 
-    @Column(name = "duracion_dias", nullable = false)
-    private Integer duracionDias;
+    @Column(name = "medicamento", length = 200)
+    private String medication;
 
-    @Column(name = "observaciones", length = 1000)
-    private String observaciones;
+    @Column(name = "dosis", length = 100)
+    private String dosage;
 
-    @Column(name = "estado", nullable = false)
-    private Boolean estado;
+    @Column(name = "frecuencia", length = 100)
+    private String frequency;
+
+    @Column(name = "duracion_dias")
+    private Integer durationDays;
+
+    @Column(name = "observaciones", length = 500)
+    private String observations;
+
+    @Column(name = "estado")
+    private Boolean status;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_mascota")
+    private Pet pet;
 }
