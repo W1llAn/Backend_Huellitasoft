@@ -1,30 +1,99 @@
-# Maven
-# Build your Java project and run tests with Apache Maven.
-# Add steps that analyze code, save build artifacts, deploy, and more:
-# https://docs.microsoft.com/azure/devops/pipelines/languages/java
-
 trigger:
   branches:
     include:
-      - develop
       - main
-      - pipeline/azure-pipelines
+      - develop
+      # quita esto si no es una rama real
+      # - pipeline/azure-pipelines
+
+pr:
+  branches:
+    include:
+      - main
+      - develop
+
+variables:
+  # ajusta estos según tu Azure
+  AZURE_SERVICE_CONNECTION: 'sc-huellitasoft'     # Nombre del Service Connection
+  WEBAPP_NAME: 'huellitasoft-backend-dev'         # Nombre del App Service
+  ARTIFACT_NAME: 'drop'
+  JAVA_VERSION: '17'
 
 pool:
   vmImage: 'ubuntu-latest'
 
-steps:
-  - task: Cache@2
-    inputs:
-      key: 'maven | "$(Agent.OS)" | pom.xml'
-      path: ~/.m2/repository
-    displayName: 'Cache de dependencias Maven'
+stages:
+  - stage: Build
+    displayName: Build & Test
+    jobs:
+      - job: build
+        steps:
+          - task: UseJavaVersion@1
+            displayName: 'Set up Java $(JAVA_VERSION)'
+            inputs:
+              versionSpec: '$(JAVA_VERSION)'
+              architecture: 'x64'
+              jdkSourceOption: 'PreInstalled'
+              jdkArchitectureOption: 'x64'
+              distribution: 'microsoft'  # o 'temurin'
 
-  - task: Maven@3
-    displayName: 'Compilación y empaquetado del backend HuellitasSoft'
-    inputs:
-      mavenPomFile: 'pom.xml'
-      goals: 'clean package'
-      publishJUnitResults: true
-      testResultsFiles: '/TEST-*.xml'
-      codeCoverageToolOption: 'JaCoCo'
+          - task: Cache@2
+            displayName: 'Cache Maven'
+            inputs:
+              key: 'maven | "$(Agent.OS)" | **/pom.xml'
+              restoreKeys: |
+                maven | "$(Agent.OS)"
+              path: ~/.m2/repository
+
+          - task: Maven@3
+            displayName: 'Compilar, test y empaquetar'
+            inputs:
+              mavenPomFile: 'pom.xml'
+              goals: 'clean verify -Pcoverage -DskipTests=false'
+              options: '-B'
+              publishJUnitResults: true
+              testResultsFiles: '**/surefire-reports/TEST-*.xml'
+              codeCoverageToolOption: 'JaCoCo'
+              javaHomeOption: 'Path'
+              jdkDirectory: '$(JAVA_HOME)'
+
+          # Publica reporte de cobertura (opcional, pero útil)
+          - task: PublishCodeCoverageResults@2
+            displayName: 'Publicar cobertura JaCoCo'
+            inputs:
+              codeCoverageTool: 'JaCoCo'
+              summaryFileLocation: '**/target/site/jacoco/jacoco.xml'
+              reportDirectory: '**/target/site/jacoco'
+              failIfCoverageEmpty: false
+
+          # Publica el .jar como artefacto de pipeline
+          - task: PublishPipelineArtifact@1
+            displayName: 'Publicar artefacto (.jar)'
+            inputs:
+              targetPath: '$(System.DefaultWorkingDirectory)/**/target/*.jar'
+              artifact: '$(ARTIFACT_NAME)'
+
+  - stage: Deploy
+    displayName: Deploy Dev
+    dependsOn: Build
+    condition: |
+      or(
+        eq(variables['Build.SourceBranch'], 'refs/heads/main'),
+        eq(variables['Build.SourceBranch'], 'refs/heads/develop')
+      )
+    jobs:
+      - job: deploy
+        steps:
+          # Descarga el artefacto del stage Build
+          - download: current
+            artifact: '$(ARTIFACT_NAME)'
+
+          # Despliegue a Azure Web App (Java SE)
+          - task: AzureWebApp@1
+            displayName: 'Desplegar a Azure Web App'
+            inputs:
+              azureSubscription: '$(AZURE_SERVICE_CONNECTION)'
+              appName: '$(WEBAPP_NAME)'
+              package: '$(Pipeline.Workspace)/$(ARTIFACT_NAME)/*.jar'
+              runtimeStack: 'JAVA|17-java17'   # para Linux con Java 17
+              appType: 'webAppLinux'
