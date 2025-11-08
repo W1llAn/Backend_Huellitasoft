@@ -5,8 +5,7 @@ trigger:
     include:
       - main
       - develop
-      # si esta rama no existe, elimínala
-      # - pipeline/azure-pipelines
+      - pipeline/azure-pipelines
 
 pr:
   branches:
