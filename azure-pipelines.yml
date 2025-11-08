@@ -3,8 +3,6 @@ trigger:
     include:
       - main
       - develop
-      # quita esto si no es una rama real
-      # - pipeline/azure-pipelines
 
 pr:
   branches:
@@ -13,11 +11,10 @@ pr:
       - develop
 
 variables:
-  # ajusta estos según tu Azure
-  AZURE_SERVICE_CONNECTION: 'sc-huellitasoft'     # Nombre del Service Connection
-  WEBAPP_NAME: 'huellitasoft-backend-dev'         # Nombre del App Service
+  AZURE_SERVICE_CONNECTION: 'sc-huellitasoft'    # <-- tu Service Connection (ARM)
+  WEBAPP_NAME: 'huellitasoft-backend-dev'        # <-- nombre del App Service
   ARTIFACT_NAME: 'drop'
-  JAVA_VERSION: '17'
+  JAVA_VERSION: '21'
 
 pool:
   vmImage: 'ubuntu-latest'
@@ -32,13 +29,11 @@ stages:
             displayName: 'Set up Java $(JAVA_VERSION)'
             inputs:
               versionSpec: '$(JAVA_VERSION)'
+              distribution: 'microsoft'          # o 'temurin'
               architecture: 'x64'
-              jdkSourceOption: 'PreInstalled'
-              jdkArchitectureOption: 'x64'
-              distribution: 'microsoft'  # o 'temurin'
 
           - task: Cache@2
-            displayName: 'Cache Maven'
+            displayName: 'Cache Maven (~/.m2)'
             inputs:
               key: 'maven | "$(Agent.OS)" | **/pom.xml'
               restoreKeys: |
@@ -46,18 +41,17 @@ stages:
               path: ~/.m2/repository
 
           - task: Maven@3
-            displayName: 'Compilar, test y empaquetar'
+            displayName: 'Maven clean verify (con cobertura)'
             inputs:
               mavenPomFile: 'pom.xml'
-              goals: 'clean verify -Pcoverage -DskipTests=false'
-              options: '-B'
+              goals: 'clean verify'
+              options: '-B'                      # modo batch
               publishJUnitResults: true
               testResultsFiles: '**/surefire-reports/TEST-*.xml'
               codeCoverageToolOption: 'JaCoCo'
               javaHomeOption: 'Path'
               jdkDirectory: '$(JAVA_HOME)'
 
-          # Publica reporte de cobertura (opcional, pero útil)
           - task: PublishCodeCoverageResults@2
             displayName: 'Publicar cobertura JaCoCo'
             inputs:
@@ -66,7 +60,6 @@ stages:
               reportDirectory: '**/target/site/jacoco'
               failIfCoverageEmpty: false
 
-          # Publica el .jar como artefacto de pipeline
           - task: PublishPipelineArtifact@1
             displayName: 'Publicar artefacto (.jar)'
             inputs:
@@ -74,7 +67,7 @@ stages:
               artifact: '$(ARTIFACT_NAME)'
 
   - stage: Deploy
-    displayName: Deploy Dev
+    displayName: Deploy to Web App (Java 21)
     dependsOn: Build
     condition: |
       or(
@@ -84,16 +77,14 @@ stages:
     jobs:
       - job: deploy
         steps:
-          # Descarga el artefacto del stage Build
           - download: current
             artifact: '$(ARTIFACT_NAME)'
 
-          # Despliegue a Azure Web App (Java SE)
           - task: AzureWebApp@1
-            displayName: 'Desplegar a Azure Web App'
+            displayName: 'Desplegar .jar a Azure Web App'
             inputs:
               azureSubscription: '$(AZURE_SERVICE_CONNECTION)'
               appName: '$(WEBAPP_NAME)'
-              package: '$(Pipeline.Workspace)/$(ARTIFACT_NAME)/*.jar'
-              runtimeStack: 'JAVA|17-java17'   # para Linux con Java 17
               appType: 'webAppLinux'
+              runtimeStack: 'JAVA|21-java21'      # Java 21 en Linux
+              package: '$(Pipeline.Workspace)/$(ARTIFACT_NAME)/*.jar'
