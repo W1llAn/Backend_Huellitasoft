@@ -1,8 +1,12 @@
+# azure-pipelines.yml
+
 trigger:
   branches:
     include:
       - main
       - develop
+      # si esta rama no existe, elimínala
+      # - pipeline/azure-pipelines
 
 pr:
   branches:
@@ -11,8 +15,9 @@ pr:
       - develop
 
 variables:
-  AZURE_SERVICE_CONNECTION: 'sc-huellitasoft'    # <-- tu Service Connection (ARM)
-  WEBAPP_NAME: 'huellitasoft-backend-dev'        # <-- nombre del App Service
+  # Ajusta estos valores a tu Azure
+  AZURE_SERVICE_CONNECTION: 'sc-huellitasoft'      # Nombre del Service Connection (ARM)
+  WEBAPP_NAME: 'huellitasoft-backend-dev'          # Nombre del App Service (Linux)
   ARTIFACT_NAME: 'drop'
   JAVA_VERSION: '21'
 
@@ -20,18 +25,24 @@ pool:
   vmImage: 'ubuntu-latest'
 
 stages:
+  # =======================
+  # Build & Test
+  # =======================
   - stage: Build
     displayName: Build & Test
     jobs:
       - job: build
+        displayName: Build with Maven
         steps:
-          - task: UseJavaVersion@1
-            displayName: 'Set up Java $(JAVA_VERSION)'
+          # Instala / prepara Java 21 (uso de task disponible por defecto)
+          - task: JavaToolInstaller@0
+            displayName: 'Instalar Java $(JAVA_VERSION)'
             inputs:
               versionSpec: '$(JAVA_VERSION)'
-              distribution: 'microsoft'          # o 'temurin'
-              architecture: 'x64'
+              jdkArchitectureOption: 'x64'
+              jdkSourceOption: 'PreInstalled'
 
+          # Cache Maven local (~/.m2)
           - task: Cache@2
             displayName: 'Cache Maven (~/.m2)'
             inputs:
@@ -40,18 +51,20 @@ stages:
                 maven | "$(Agent.OS)"
               path: ~/.m2/repository
 
+          # Compila, ejecuta tests y empaqueta (Spring Boot 3.5.6 Java 21)
           - task: Maven@3
-            displayName: 'Maven clean verify (con cobertura)'
+            displayName: 'Maven clean verify'
             inputs:
               mavenPomFile: 'pom.xml'
-              goals: 'clean verify'
-              options: '-B'                      # modo batch
+              goals: 'clean verify'           # usa verify para generar el jar reempaquetado y reportes
+              options: '-B'
               publishJUnitResults: true
               testResultsFiles: '**/surefire-reports/TEST-*.xml'
               codeCoverageToolOption: 'JaCoCo'
               javaHomeOption: 'Path'
               jdkDirectory: '$(JAVA_HOME)'
 
+          # Publica cobertura JaCoCo (opcional pero útil)
           - task: PublishCodeCoverageResults@2
             displayName: 'Publicar cobertura JaCoCo'
             inputs:
@@ -60,15 +73,20 @@ stages:
               reportDirectory: '**/target/site/jacoco'
               failIfCoverageEmpty: false
 
+          # Publica el .jar como artefacto de pipeline
           - task: PublishPipelineArtifact@1
             displayName: 'Publicar artefacto (.jar)'
             inputs:
               targetPath: '$(System.DefaultWorkingDirectory)/**/target/*.jar'
               artifact: '$(ARTIFACT_NAME)'
 
+  # =======================
+  # Deploy
+  # =======================
   - stage: Deploy
-    displayName: Deploy to Web App (Java 21)
+    displayName: Deploy to Azure Web App (Linux, Java 21)
     dependsOn: Build
+    # Despliega solo en main/develop
     condition: |
       or(
         eq(variables['Build.SourceBranch'], 'refs/heads/main'),
@@ -76,15 +94,19 @@ stages:
       )
     jobs:
       - job: deploy
+        displayName: Deploy JAR
         steps:
+          # Descarga el artefacto generado en Build
           - download: current
+            displayName: 'Descargar artefacto'
             artifact: '$(ARTIFACT_NAME)'
 
+          # Despliegue al App Service Linux (Java SE)
           - task: AzureWebApp@1
             displayName: 'Desplegar .jar a Azure Web App'
             inputs:
               azureSubscription: '$(AZURE_SERVICE_CONNECTION)'
               appName: '$(WEBAPP_NAME)'
               appType: 'webAppLinux'
-              runtimeStack: 'JAVA|21-java21'      # Java 21 en Linux
+              runtimeStack: 'JAVA|21-java21'     # Runtime Java 21
               package: '$(Pipeline.Workspace)/$(ARTIFACT_NAME)/*.jar'
