@@ -29,13 +29,11 @@ public class TreatmentServiceImpl implements TreatmentService {
     private final TreatmentRepository treatmentRepository;
     private final ConsultationRepository consultationRepository;
     private final PetRepository petRepository;
-    private final MedicalHistoryRepository medicalHistoryRepository;
 
     private static final String TREATMENT_NOT_FOUND_LOG = "Treatment not found: {}";
     private static final String TREATMENT_NOT_FOUND_MSG = "Tratamiento no encontrado con ID: ";
     private static final String CONSULTATION_NOT_FOUND_MSG = "Consulta no encontrada con ID: ";
     private static final String PET_NOT_FOUND_MSG = "Mascota no encontrada con ID: ";
-    private static final String MEDICAL_HISTORY_NOT_FOUND_MSG = "Historial clínico no encontrado con ID: ";
 
     // ==================== CRUD OPERATIONS ====================
 
@@ -51,25 +49,27 @@ public class TreatmentServiceImpl implements TreatmentService {
                 });
 
         // Validar que la mascota existe
-        Pet mascota = petRepository.findById(treatmentCreateDTO.getIdMascota())
+        Pet pet = petRepository.findById(treatmentCreateDTO.getIdMascota())
                 .orElseThrow(() -> {
                     log.error("Pet not found: {}", treatmentCreateDTO.getIdMascota());
                     return new ResourceNotFoundException(PET_NOT_FOUND_MSG + treatmentCreateDTO.getIdMascota());
                 });
 
-
-
-        // Crear nuevo tratamiento
+        // Crear nuevo tratamiento con todos los atributos
         Treatment treatment = Treatment.builder()
                 .consultation(consultation)
-                .mascota(mascota)
-                .duracionDias(treatmentCreateDTO.getDuracionDias())
-                .observaciones(treatmentCreateDTO.getObservaciones())
-                .estado(treatmentCreateDTO.getEstado())
+                .pet(pet)
+                .description(treatmentCreateDTO.getDescription())
+                .medication(treatmentCreateDTO.getMedication())
+                .dosage(treatmentCreateDTO.getDosage())
+                .frequency(treatmentCreateDTO.getFrequency())
+                .durationDays(treatmentCreateDTO.getDurationDays())
+                .observations(treatmentCreateDTO.getObservations())
+                .status(treatmentCreateDTO.getStatus() != null ? treatmentCreateDTO.getStatus() : true)
                 .build();
 
         Treatment savedTreatment = treatmentRepository.save(treatment);
-        log.info("Treatment created successfully with ID: {}", savedTreatment.getIdTratamiento());
+        log.info("Treatment created successfully with ID: {}", savedTreatment.getId());
 
         return mapToResponseDTO(savedTreatment);
     }
@@ -97,20 +97,20 @@ public class TreatmentServiceImpl implements TreatmentService {
                 .toList();
     }
 
-
     @Override
     @Transactional(readOnly = true)
     public List<TreatmentResponseDTO> getTreatmentsByMascota(Long idMascota) {
-        log.info("Fetching treatments for pet: {}", idMascota);
-        return treatmentRepository.findByMascota_IdMascota(idMascota).stream()
+        log.info("Obteniendo tratamientos de mascota: {}", idMascota);
+        return treatmentRepository.findByPet_IdMascota(idMascota).stream()
                 .map(this::mapToResponseDTO)
                 .toList();
     }
+    /*findByPet_IdMascota*/
 
     @Override
     @Transactional(readOnly = true)
     public List<TreatmentResponseDTO> getActiveTreatmentsByMascota(Long idMascota) {
-        log.info("Fetching active treatments for pet: {}", idMascota);
+        log.info("Obteniendo tratamientos activos de mascota: {}", idMascota);
         return treatmentRepository.findActiveByMascota(idMascota).stream()
                 .map(this::mapToResponseDTO)
                 .toList();
@@ -118,7 +118,7 @@ public class TreatmentServiceImpl implements TreatmentService {
 
     @Override
     public TreatmentResponseDTO updateTreatment(Long idTratamiento, TreatmentUpdateDTO treatmentUpdateDTO) {
-        log.info("Updating treatment: {}", idTratamiento);
+        log.info("Actualizando tratamientos: {}", idTratamiento);
 
         Treatment treatment = treatmentRepository.findById(idTratamiento)
                 .orElseThrow(() -> {
@@ -126,9 +126,28 @@ public class TreatmentServiceImpl implements TreatmentService {
                     return new ResourceNotFoundException(TREATMENT_NOT_FOUND_MSG + idTratamiento);
                 });
 
-        treatment.setDuracionDias(treatmentUpdateDTO.getDuracionDias());
-        treatment.setObservaciones(treatmentUpdateDTO.getObservaciones());
-        treatment.setEstado(treatmentUpdateDTO.getEstado());
+        // Actualizar todos los campos
+        if (treatmentUpdateDTO.getDescription() != null) {
+            treatment.setDescription(treatmentUpdateDTO.getDescription());
+        }
+        if (treatmentUpdateDTO.getMedication() != null) {
+            treatment.setMedication(treatmentUpdateDTO.getMedication());
+        }
+        if (treatmentUpdateDTO.getDosage() != null) {
+            treatment.setDosage(treatmentUpdateDTO.getDosage());
+        }
+        if (treatmentUpdateDTO.getFrequency() != null) {
+            treatment.setFrequency(treatmentUpdateDTO.getFrequency());
+        }
+        if (treatmentUpdateDTO.getDurationDays() != null) {
+            treatment.setDurationDays(treatmentUpdateDTO.getDurationDays());
+        }
+        if (treatmentUpdateDTO.getObservations() != null) {
+            treatment.setObservations(treatmentUpdateDTO.getObservations());
+        }
+        if (treatmentUpdateDTO.getStatus() != null) {
+            treatment.setStatus(treatmentUpdateDTO.getStatus());
+        }
 
         Treatment updatedTreatment = treatmentRepository.save(treatment);
         log.info("Treatment updated successfully: {}", idTratamiento);
@@ -169,7 +188,7 @@ public class TreatmentServiceImpl implements TreatmentService {
                     return new ResourceNotFoundException(TREATMENT_NOT_FOUND_MSG + idTratamiento);
                 });
 
-        treatment.setEstado(nuevoEstado);
+        treatment.setStatus(nuevoEstado);
         Treatment updatedTreatment = treatmentRepository.save(treatment);
         log.info("Treatment status updated successfully: {}", idTratamiento);
 
@@ -182,15 +201,21 @@ public class TreatmentServiceImpl implements TreatmentService {
      * Mapea una entidad Treatment a TreatmentResponseDTO
      */
     private TreatmentResponseDTO mapToResponseDTO(Treatment treatment) {
-        Pet mascota = treatment.getMascota();
+        Pet pet = treatment.getPet();
+        Consultation consultation = treatment.getConsultation();
+
         return TreatmentResponseDTO.builder()
-                .idTratamiento(treatment.getIdTratamiento())
-                .idConsulta(treatment.getConsultation().getIdConsulta())
-                .idMascota(mascota.getIdMascota())
-                .nombreMascota(mascota.getNombre())
-                .duracionDias(treatment.getDuracionDias())
-                .observaciones(treatment.getObservaciones())
-                .estado(treatment.getEstado())
+                .idTratamiento(treatment.getId())
+                .idConsulta(consultation.getIdConsulta())
+                .idMascota(pet.getIdMascota())
+                .nombreMascota(pet.getNombre())
+                .description(treatment.getDescription())
+                .medication(treatment.getMedication())
+                .dosage(treatment.getDosage())
+                .frequency(treatment.getFrequency())
+                .durationDays(treatment.getDurationDays())
+                .observations(treatment.getObservations())
+                .status(treatment.getStatus())
                 .build();
     }
 }

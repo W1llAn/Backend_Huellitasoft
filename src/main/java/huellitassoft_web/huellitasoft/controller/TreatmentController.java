@@ -25,6 +25,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @SecurityRequirement(name = "Bearer Authentication")
 @Tag(name = "Treatment", description = "Gestión de tratamientos de mascotas")
+
 public class TreatmentController {
 
     private final TreatmentService treatmentService;
@@ -33,14 +34,13 @@ public class TreatmentController {
 
     @PostMapping
     @Operation(summary = "Crear un nuevo tratamiento",
-            description = "Registra un nuevo tratamiento para una consulta")
+            description = "Registra un nuevo tratamiento médico con medicamento, dosis, frecuencia y duración para una consulta")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Tratamiento creado exitosamente",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = TreatmentResponseDTO.class))),
-            @ApiResponse(responseCode = "400", description = "Datos inválidos"),
+            @ApiResponse(responseCode = "400", description = "Datos inválidos o falta información requerida"),
             @ApiResponse(responseCode = "401", description = "No autorizado"),
-            @ApiResponse(responseCode = "404", description = "Consulta, mascota o historial no encontrado"),
-            @ApiResponse(responseCode = "409", description = "El número del tratamiento ya existe")
+            @ApiResponse(responseCode = "404", description = "Consulta o mascota no encontrada")
     })
     public ResponseEntity<TreatmentResponseDTO> createTreatment(
             @Valid @RequestBody TreatmentCreateDTO treatmentCreateDTO) {
@@ -52,7 +52,7 @@ public class TreatmentController {
 
     @GetMapping("/{id}")
     @Operation(summary = "Obtener un tratamiento por ID",
-            description = "Retorna los detalles de un tratamiento específico")
+            description = "Retorna los detalles completos de un tratamiento específico incluyendo medicamento, dosis, frecuencia y observaciones")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Tratamiento encontrado",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = TreatmentResponseDTO.class))),
@@ -68,9 +68,9 @@ public class TreatmentController {
 
     @GetMapping("/consulta/{idConsulta}")
     @Operation(summary = "Obtener tratamientos por consulta",
-            description = "Retorna todos los tratamientos asociados a una consulta")
+            description = "Retorna todos los tratamientos médicos asociados a una consulta específica")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Lista de tratamientos obtenida",
+            @ApiResponse(responseCode = "200", description = "Lista de tratamientos obtenida exitosamente",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = TreatmentResponseDTO.class))),
             @ApiResponse(responseCode = "401", description = "No autorizado")
     })
@@ -81,12 +81,11 @@ public class TreatmentController {
         return ResponseEntity.ok(treatments);
     }
 
-
     @GetMapping("/mascota/{idMascota}")
     @Operation(summary = "Obtener tratamientos por mascota",
-            description = "Retorna todos los tratamientos de una mascota")
+            description = "Retorna el historial completo de tratamientos médicos de una mascota")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Lista de tratamientos obtenida",
+            @ApiResponse(responseCode = "200", description = "Lista de tratamientos obtenida exitosamente",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = TreatmentResponseDTO.class))),
             @ApiResponse(responseCode = "401", description = "No autorizado")
     })
@@ -99,9 +98,9 @@ public class TreatmentController {
 
     @GetMapping("/mascota/{idMascota}/activos")
     @Operation(summary = "Obtener tratamientos activos de una mascota",
-            description = "Retorna solo los tratamientos activos (estado = true) de una mascota")
+            description = "Retorna únicamente los tratamientos activos (en curso) de una mascota específica")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Lista de tratamientos obtenida",
+            @ApiResponse(responseCode = "200", description = "Lista de tratamientos activos obtenida exitosamente",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = TreatmentResponseDTO.class))),
             @ApiResponse(responseCode = "401", description = "No autorizado")
     })
@@ -114,9 +113,9 @@ public class TreatmentController {
 
     @GetMapping
     @Operation(summary = "Obtener todos los tratamientos",
-            description = "Retorna una lista de todos los tratamientos registrados")
+            description = "Retorna una lista completa de todos los tratamientos médicos registrados en el sistema")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Lista de tratamientos obtenida",
+            @ApiResponse(responseCode = "200", description = "Lista de tratamientos obtenida exitosamente",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = TreatmentResponseDTO.class))),
             @ApiResponse(responseCode = "401", description = "No autorizado")
     })
@@ -129,14 +128,13 @@ public class TreatmentController {
 
     @PutMapping("/{id}")
     @Operation(summary = "Actualizar un tratamiento",
-            description = "Actualiza los datos de un tratamiento existente")
+            description = "Actualiza la información de un tratamiento existente incluyendo descripción, medicamento, dosis, frecuencia, duración y observaciones")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Tratamiento actualizado exitosamente",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = TreatmentResponseDTO.class))),
             @ApiResponse(responseCode = "400", description = "Datos inválidos"),
             @ApiResponse(responseCode = "401", description = "No autorizado"),
-            @ApiResponse(responseCode = "404", description = "Tratamiento no encontrado"),
-            @ApiResponse(responseCode = "409", description = "El número del tratamiento ya existe")
+            @ApiResponse(responseCode = "404", description = "Tratamiento no encontrado")
     })
     public ResponseEntity<TreatmentResponseDTO> updateTreatment(
             @Parameter(description = "ID del tratamiento", example = "1")
@@ -146,9 +144,9 @@ public class TreatmentController {
         return ResponseEntity.ok(updatedTreatment);
     }
 
-    @PutMapping("/{id}/estado")
+    @PatchMapping("/{id}/estado")
     @Operation(summary = "Actualizar estado de un tratamiento",
-            description = "Cambia el estado (activo/inactivo) de un tratamiento")
+            description = "Cambia el estado de un tratamiento entre activo (true) e inactivo (false)")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Estado actualizado exitosamente",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = TreatmentResponseDTO.class))),
@@ -158,7 +156,7 @@ public class TreatmentController {
     public ResponseEntity<TreatmentResponseDTO> updateTreatmentStatus(
             @Parameter(description = "ID del tratamiento", example = "1")
             @PathVariable Long id,
-            @Parameter(description = "Nuevo estado", example = "false")
+            @Parameter(description = "Nuevo estado del tratamiento (true = activo, false = inactivo)", example = "false")
             @RequestParam Boolean nuevoEstado) {
         TreatmentResponseDTO updatedTreatment = treatmentService.updateTreatmentStatus(id, nuevoEstado);
         return ResponseEntity.ok(updatedTreatment);
@@ -168,7 +166,7 @@ public class TreatmentController {
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Eliminar un tratamiento",
-            description = "Elimina un tratamiento de la base de datos")
+            description = "Elimina permanentemente un tratamiento del sistema")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "Tratamiento eliminado exitosamente"),
             @ApiResponse(responseCode = "401", description = "No autorizado"),
