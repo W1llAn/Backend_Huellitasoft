@@ -11,6 +11,7 @@ import huellitassoft_web.huellitasoft.exception.ResourceAlreadyExistsException;
 import huellitassoft_web.huellitasoft.exception.ResourceNotFoundException;
 import huellitassoft_web.huellitasoft.repository.UserRepository;
 import huellitassoft_web.huellitasoft.repository.SubsidiaryRepository;
+import huellitassoft_web.huellitasoft.service.CloudinaryService;
 import huellitassoft_web.huellitasoft.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,10 +21,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
-/**
- * Implementación del servicio de usuarios.
- * Proporciona la lógica de negocio para operaciones CRUD de usuarios.
- */
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -41,12 +38,8 @@ public class UserServiceImpl implements UserService {
     private final SubsidiaryRepository subsidiaryRepository;
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
+    private final CloudinaryService cloudinaryService; // ← INYECCIÓN DE CLOUDINARY
 
-    /**
-     * Obtiene todos los usuarios.
-     *
-     * @return lista de usuarios como DTOs
-     */
     @Override
     @Transactional(readOnly = true)
     public List<UserResponseDTO> getAllUsers() {
@@ -57,13 +50,6 @@ public class UserServiceImpl implements UserService {
                 .toList();
     }
 
-    /**
-     * Obtiene un usuario por su ID.
-     *
-     * @param idUsuario el ID del usuario
-     * @return el usuario como DTO
-     * @throws ResourceNotFoundException si el usuario no existe
-     */
     @Override
     @Transactional(readOnly = true)
     public UserResponseDTO getUserById(Long idUsuario) {
@@ -73,13 +59,6 @@ public class UserServiceImpl implements UserService {
         return convertToResponseDTO(user);
     }
 
-    /**
-     * Obtiene un usuario por su email.
-     *
-     * @param email el email del usuario
-     * @return el usuario como DTO
-     * @throws ResourceNotFoundException si el usuario no existe
-     */
     @Override
     @Transactional(readOnly = true)
     public UserResponseDTO getUserByEmail(String email) {
@@ -89,13 +68,6 @@ public class UserServiceImpl implements UserService {
         return convertToResponseDTO(user);
     }
 
-    /**
-     * Obtiene un usuario por su nombre de usuario.
-     *
-     * @param usuario el nombre de usuario
-     * @return el usuario como DTO
-     * @throws ResourceNotFoundException si el usuario no existe
-     */
     @Override
     @Transactional(readOnly = true)
     public UserResponseDTO getUserByUsuario(String usuario) {
@@ -105,12 +77,6 @@ public class UserServiceImpl implements UserService {
         return convertToResponseDTO(user);
     }
 
-    /**
-     * Obtiene todos los usuarios con un rol específico.
-     *
-     * @param rol el rol a buscar
-     * @return lista de usuarios con ese rol como DTOs
-     */
     @Override
     @Transactional(readOnly = true)
     public List<UserResponseDTO> getUsersByRole(UserRol rol) {
@@ -121,13 +87,6 @@ public class UserServiceImpl implements UserService {
                 .toList();
     }
 
-    /**
-     * Crea un nuevo usuario.
-     *
-     * @param createDTO DTO con la información del usuario
-     * @return el usuario creado como DTO
-     * @throws ResourceAlreadyExistsException si el email o usuario ya existe
-     */
     @Override
     public UserResponseDTO createUser(UserCreateDTO createDTO) {
         log.info("Creando nuevo usuario con email: {} y usuario: {}", createDTO.getEmail(), createDTO.getUsername());
@@ -145,12 +104,22 @@ public class UserServiceImpl implements UserService {
         }
         String rawPassword = createDTO.getContrasena();
         String rolCliente = String.valueOf(createDTO.getRol());
+
+        //  SUBIR IMAGEN A CLOUDINARY SI VIENE EN EL DTO
+        String imageUrl = null;
+        if (createDTO.getImagen() != null && !createDTO.getImagen().isEmpty()) {
+            log.info(" Subiendo imagen de usuario a Cloudinary...");
+            imageUrl = cloudinaryService.uploadImageUsuarios(createDTO.getImagen());
+            log.info(" Imagen subida: {}", imageUrl);
+        }
+
         User user = User.builder()
                 .email(createDTO.getEmail())
                 .username(createDTO.getUsername())
                 .contrasena(passwordEncoder.encode(createDTO.getContrasena()))
                 .rol(createDTO.getRol())
                 .estado(createDTO.getEstado())
+                .imagen(imageUrl) // GUARDAR URL DE CLOUDINARY
                 .build();
 
         // Si se proporciona creadoPorId, validar que el usuario exista
@@ -171,6 +140,8 @@ public class UserServiceImpl implements UserService {
 
         User savedUser = userRepository.save(user);
         log.info("Usuario creado exitosamente con ID: {} y email: {}", savedUser.getIdUsuario(), savedUser.getEmail());
+
+        // Enviar email con credenciales si es cliente
         if (rolCliente.equals("ROLE_CLIENTE")) {
             try {
                 if (savedUser.getEmail() != null && rawPassword != null) {
@@ -202,22 +173,13 @@ public class UserServiceImpl implements UserService {
                     );
                 }
             } catch (Exception e) {
-                log.error("Error al enviar las credenciales al usuario {}: {}", savedUser.getIdUsuario(), e.getMessage());
+                log.error("❌ Error al enviar las credenciales al usuario {}: {}", savedUser.getIdUsuario(), e.getMessage());
             }
         }
 
         return convertToResponseDTO(savedUser);
     }
 
-    /**
-     * Actualiza un usuario existente.
-     *
-     * @param idUsuario el ID del usuario a actualizar
-     * @param updateDTO DTO con los datos a actualizar
-     * @return el usuario actualizado como DTO
-     * @throws ResourceNotFoundException      si el usuario no existe
-     * @throws ResourceAlreadyExistsException si el email o usuario ya existe en otro usuario
-     */
     @Override
     public UserResponseDTO updateUser(Long idUsuario, UserUpdateDTO updateDTO) {
         log.info("Actualizando usuario con ID: {}", idUsuario);
@@ -226,19 +188,38 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new ResourceNotFoundException(USER_NOT_FOUND_BY_ID + idUsuario));
 
         // Verificar que el nuevo email no exista en otro usuario
-        if (!user.getEmail().equals(updateDTO.getEmail()) && userRepository.existsByEmail(updateDTO.getEmail())) {
+        if (updateDTO.getEmail() != null && !user.getEmail().equals(updateDTO.getEmail())
+                && userRepository.existsByEmail(updateDTO.getEmail())) {
             log.warn("Intento de actualizar a email duplicado: {}", updateDTO.getEmail());
             throw new ResourceAlreadyExistsException(USER_ALREADY_EXISTS_EMAIL + updateDTO.getEmail());
         }
 
         // Verificar que el nuevo usuario no exista en otro usuario
-        if (!user.getUsername().equals(updateDTO.getUsername()) && userRepository.existsByUsername(updateDTO.getUsername())) {
+        if (updateDTO.getUsername() != null && !user.getUsername().equals(updateDTO.getUsername())
+                && userRepository.existsByUsername(updateDTO.getUsername())) {
             log.warn("Intento de actualizar a usuario duplicado: {}", updateDTO.getUsername());
             throw new ResourceAlreadyExistsException(USER_ALREADY_EXISTS_USUARIO + updateDTO.getUsername());
         }
 
-        user.setEmail(updateDTO.getEmail());
-        user.setUsername(updateDTO.getUsername());
+        // ACTUALIZAR IMAGEN SI VIENE UNA NUEVA
+        if (updateDTO.getImagen() != null && !updateDTO.getImagen().isEmpty()) {
+            log.info("Actualizando imagen de usuario con ID: {}", idUsuario);
+
+            // Eliminar imagen anterior si existe
+            if (user.getImagen() != null && !user.getImagen().isEmpty()) {
+                log.info("Eliminando imagen anterior de Cloudinary...");
+                cloudinaryService.deleteImageUsuarios(user.getImagen());
+            }
+
+            //Subir nueva imagen
+            String nuevaImagenUrl = cloudinaryService.uploadImageUsuarios(updateDTO.getImagen());
+            user.setImagen(nuevaImagenUrl);
+            log.info("Nueva imagen subida: {}", nuevaImagenUrl);
+        }
+
+        // Actualizar otros campos
+        if (updateDTO.getEmail() != null) user.setEmail(updateDTO.getEmail());
+        if (updateDTO.getUsername() != null) user.setUsername(updateDTO.getUsername());
 
         // Solo actualizar contraseña si se proporciona
         if (updateDTO.getContrasena() != null && !updateDTO.getContrasena().isBlank()) {
@@ -246,16 +227,14 @@ public class UserServiceImpl implements UserService {
             log.info("Contraseña del usuario actualizada");
         }
 
-        user.setRol(updateDTO.getRol());
-        user.setEstado(updateDTO.getEstado());
+        if (updateDTO.getRol() != null) user.setRol(updateDTO.getRol());
+        if (updateDTO.getEstado() != null) user.setEstado(updateDTO.getEstado());
 
         // Actualizar creadoPor si se proporciona
         if (updateDTO.getCreadoPorId() != null) {
             User creadoPor = userRepository.findById(updateDTO.getCreadoPorId())
                     .orElseThrow(() -> new ResourceNotFoundException(USER_NOT_FOUND_BY_ID + updateDTO.getCreadoPorId()));
             user.setCreadoPor(creadoPor);
-        } else {
-            user.setCreadoPor(null);
         }
 
         // Actualizar sucursal si se proporciona
@@ -264,8 +243,6 @@ public class UserServiceImpl implements UserService {
                     .orElseThrow(() -> new ResourceNotFoundException(SUBSIDIARY_NOT_FOUND + updateDTO.getIdSucursal()));
             user.setSucursal(subsidiary);
             log.info("Sucursal del usuario actualizada a: {}", updateDTO.getIdSucursal());
-        } else {
-            user.setSucursal(null);
         }
 
         User updatedUser = userRepository.save(user);
@@ -273,33 +250,23 @@ public class UserServiceImpl implements UserService {
         return convertToResponseDTO(updatedUser);
     }
 
-    /**
-     * Elimina un usuario.
-     *
-     * @param idUsuario el ID del usuario a eliminar
-     * @throws ResourceNotFoundException si el usuario no existe
-     */
     @Override
     public void deleteUser(Long idUsuario) {
         log.info("Eliminando usuario con ID: {}", idUsuario);
 
-        if (!userRepository.existsById(idUsuario)) {
-            log.warn("Intento de eliminar usuario no existente con ID: {}", idUsuario);
-            throw new ResourceNotFoundException(USER_NOT_FOUND_BY_ID + idUsuario);
+        User user = userRepository.findById(idUsuario)
+                .orElseThrow(() -> new ResourceNotFoundException(USER_NOT_FOUND_BY_ID + idUsuario));
+
+        //  ELIMINAR IMAGEN DE CLOUDINARY ANTES DE ELIMINAR EL USUARIO
+        if (user.getImagen() != null && !user.getImagen().isEmpty()) {
+            log.info("Eliminando imagen de Cloudinary antes de eliminar usuario...");
+            cloudinaryService.deleteImageUsuarios(user.getImagen());
         }
 
         userRepository.deleteById(idUsuario);
         log.info("Usuario eliminado exitosamente con ID: {}", idUsuario);
     }
 
-    /**
-     * Cambia el estado de un usuario.
-     *
-     * @param idUsuario   el ID del usuario
-     * @param nuevoEstado el nuevo estado
-     * @return el usuario con estado actualizado como DTO
-     * @throws ResourceNotFoundException si el usuario no existe
-     */
     @Override
     public UserResponseDTO changeUserState(Long idUsuario, UserState nuevoEstado) {
         log.info("Cambiando estado del usuario {} a {}", idUsuario, nuevoEstado);
@@ -313,12 +280,6 @@ public class UserServiceImpl implements UserService {
         return convertToResponseDTO(updatedUser);
     }
 
-    /**
-     * Convierte una entidad User a UserResponseDTO.
-     *
-     * @param user la entidad User
-     * @return el DTO UserResponseDTO
-     */
     private UserResponseDTO convertToResponseDTO(User user) {
         UserResponseDTO dto = UserResponseDTO.builder()
                 .idUsuario(user.getIdUsuario())
@@ -326,6 +287,7 @@ public class UserServiceImpl implements UserService {
                 .username(user.getUsername())
                 .rol(user.getRol())
                 .estado(user.getEstado())
+                .imagen(user.getImagen()) // ← INCLUIR URL DE IMAGEN
                 .fechaCreacion(user.getFechaCreacion())
                 .build();
 
@@ -342,94 +304,52 @@ public class UserServiceImpl implements UserService {
         return dto;
     }
 
-    /**
-     * Obtiene todos los usuarios creados por un usuario específico.
-     *
-     * @param creadoPorId el ID del usuario que creó otros usuarios
-     * @return lista de usuarios creados por el usuario especificado
-     */
     @Override
     @Transactional(readOnly = true)
     public List<UserResponseDTO> getUsersCreatedBy(Long creadoPorId) {
         log.info("Obteniendo usuarios creados por el usuario: {}", creadoPorId);
-
-        // Verificar que el usuario creador existe
         if (!userRepository.existsById(creadoPorId)) {
-            log.warn("Usuario creador no encontrado con ID: {}", creadoPorId);
             throw new ResourceNotFoundException(USER_NOT_FOUND_BY_ID + creadoPorId);
         }
-
         return userRepository.findByCreadoPor_IdUsuario(creadoPorId)
                 .stream()
                 .map(this::convertToResponseDTO)
                 .toList();
     }
 
-    /**
-     * Obtiene todos los usuarios con un rol específico creados por un usuario específico.
-     *
-     * @param creadoPorId el ID del usuario que creó otros usuarios
-     * @param rol         el rol a buscar
-     * @return lista de usuarios con el rol especificado creados por el usuario
-     */
     @Override
     @Transactional(readOnly = true)
     public List<UserResponseDTO> getUsersCreatedByWithRole(Long creadoPorId, UserRol rol) {
         log.info("Obteniendo usuarios con rol {} creados por el usuario: {}", rol, creadoPorId);
-
-        // Verificar que el usuario creador existe
         if (!userRepository.existsById(creadoPorId)) {
-            log.warn("Usuario creador no encontrado con ID: {}", creadoPorId);
             throw new ResourceNotFoundException(USER_NOT_FOUND_BY_ID + creadoPorId);
         }
-
         return userRepository.findByCreadoPor_IdUsuarioAndRol(creadoPorId, rol)
                 .stream()
                 .map(this::convertToResponseDTO)
                 .toList();
     }
 
-    /**
-     * Obtiene todos los usuarios veterinarios de una sucursal específica.
-     *
-     * @param idSucursal el ID de la sucursal
-     * @return lista de usuarios veterinarios de la sucursal
-     */
     @Override
     @Transactional(readOnly = true)
     public List<UserResponseDTO> getUsersBySucursal(Long idSucursal) {
         log.info("Obteniendo usuarios de la sucursal: {}", idSucursal);
-
-        // Verificar que la sucursal existe
         if (!subsidiaryRepository.existsById(idSucursal)) {
-            log.warn("Sucursal no encontrada con ID: {}", idSucursal);
             throw new ResourceNotFoundException(SUBSIDIARY_NOT_FOUND + idSucursal);
         }
-
         return userRepository.findBySucursal_IdSubsidiary(idSucursal)
                 .stream()
                 .map(this::convertToResponseDTO)
                 .toList();
     }
 
-    /**
-     * Obtiene todos los usuarios veterinarios de una sucursal con un rol específico.
-     *
-     * @param idSucursal el ID de la sucursal
-     * @param rol        el rol a buscar (VETERINARIO o ADMIN_VETERINARIA)
-     * @return lista de usuarios veterinarios de la sucursal con el rol especificado
-     */
     @Override
     @Transactional(readOnly = true)
     public List<UserResponseDTO> getUsersBySucursalAndRol(Long idSucursal, UserRol rol) {
         log.info("Obteniendo usuarios con rol {} de la sucursal: {}", rol, idSucursal);
-
-        // Verificar que la sucursal existe
         if (!subsidiaryRepository.existsById(idSucursal)) {
-            log.warn("Sucursal no encontrada con ID: {}", idSucursal);
             throw new ResourceNotFoundException(SUBSIDIARY_NOT_FOUND + idSucursal);
         }
-
         return userRepository.findBySucursal_IdSubsidiaryAndRol(idSucursal, rol)
                 .stream()
                 .map(this::convertToResponseDTO)

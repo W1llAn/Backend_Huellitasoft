@@ -6,9 +6,9 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.w3c.dom.Text;
 
 import java.time.LocalDate;
-import java.util.Date;
 
 @Entity
 @Table(name = "mascota")
@@ -25,15 +25,18 @@ public class Pet {
     @Column(name = "nombre")
     private String nombre;
 
-    @Column(name = "fecha_nacimiento" )
+    @Column(name = "fecha_nacimiento")
     private LocalDate fechaNacimiento;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "sexo")
     private Sex sexo;
 
-    @Column (name = "estado")
+    @Column(name = "estado")
     private Boolean estado;
+
+    @Column(name = "imagen", columnDefinition = "TEXT")
+    private String imagen;
 
     // Relación con la entidad Cliente
     @ManyToOne(fetch = FetchType.LAZY, optional = false)

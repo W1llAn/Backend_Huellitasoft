@@ -1,5 +1,6 @@
 package huellitassoft_web.huellitasoft.dto.user;
 
+import jakarta.persistence.Column;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -8,6 +9,7 @@ import lombok.NoArgsConstructor;
 
 import huellitassoft_web.huellitasoft.enums.UserRol;
 import huellitassoft_web.huellitasoft.enums.UserState;
+import org.w3c.dom.Text;
 
 /**
  * DTO para actualizar un usuario.
@@ -36,6 +38,8 @@ public class UserUpdateDTO {
 
     @NotNull(message = "El estado es requerido")
     private UserState estado;
+
+    private String imagen;
 
     private Long creadoPorId;
 
