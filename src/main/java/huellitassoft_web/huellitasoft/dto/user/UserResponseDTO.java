@@ -28,4 +28,5 @@ public class UserResponseDTO {
     private String creadoPorUsername;
     private Long idSucursal;
     private String sucursalNombre;
+    private String imagen;
 }

@@ -7,6 +7,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.w3c.dom.Text;
 
 import java.time.LocalDateTime;
 
@@ -44,6 +45,9 @@ public class User {
 
     @Column(name = "plan_contratado")
     private String planContratado;
+
+    @Column(name = "imagen", columnDefinition = "TEXT")
+    private String imagen;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = true)
     @JoinColumn(name = "creado_por", nullable = true)

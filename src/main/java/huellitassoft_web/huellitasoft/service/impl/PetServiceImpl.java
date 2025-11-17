@@ -11,12 +11,14 @@ import huellitassoft_web.huellitasoft.enums.Sex;
 import huellitassoft_web.huellitasoft.repository.ClientRepository;
 import huellitassoft_web.huellitasoft.repository.PetRepository;
 import huellitassoft_web.huellitasoft.repository.RaceRepository;
+import huellitassoft_web.huellitasoft.service.CloudinaryService;
 import huellitassoft_web.huellitasoft.service.PetService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.w3c.dom.Text;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -29,6 +31,7 @@ public class PetServiceImpl implements PetService {
     private final PetRepository petRepository;
     private final ClientRepository clientRepository;
     private final RaceRepository raceRepository;
+    private final CloudinaryService cloudinaryService;
 
     private ClientResponseDTO mapToResponseDTO(Client client) {
         return ClientResponseDTO.builder()
@@ -43,6 +46,7 @@ public class PetServiceImpl implements PetService {
                 .idUsuario(client.getUsuario().getIdUsuario())
                 .build();
     }
+
     private PetResponseDTO convertToDTO(Pet pet) {
         return PetResponseDTO.builder()
                 .idMascota(pet.getIdMascota())
@@ -52,11 +56,12 @@ public class PetServiceImpl implements PetService {
                 .estado(pet.getEstado())
                 .idCliente(pet.getCliente().getIdCliente())
                 .idRaza(pet.getRaza().getIdRaza())
-                .nombreCliente(pet.getCliente().getNombres()+" "+pet.getCliente().getApellidos())
+                .nombreCliente(pet.getCliente().getNombres() + " " + pet.getCliente().getApellidos())
                 .nombreRaza(pet.getRaza().getNombre())
                 .clientResponseDTO(mapToResponseDTO(pet.getCliente()))
                 .idEspecie(pet.getRaza().getSpecie().getIdEspecie())
                 .nombreEspecie(pet.getRaza().getSpecie().getNombre())
+                .imagen(pet.getImagen())
                 .build();
     }
 
@@ -92,11 +97,18 @@ public class PetServiceImpl implements PetService {
         Race raza = raceRepository.findById(petCreateDTO.getIdRaza())
                 .orElseThrow(() -> new EntityNotFoundException("Raza no encontrada con id: " + petCreateDTO.getIdRaza()));
 
+        String imageUrl = null;
+        if (petCreateDTO.getImagen() != null && !petCreateDTO.getImagen().isEmpty()) {
+            log.info("Subiendo imagen de mascota a Cloudinary...");
+            imageUrl = cloudinaryService.uploadImageMascotas(petCreateDTO.getImagen());
+        }
+
         Pet pet = Pet.builder()
                 .nombre(petCreateDTO.getNombre())
                 .fechaNacimiento(petCreateDTO.getFechaNacimiento())
                 .sexo(petCreateDTO.getSexo())
                 .estado(petCreateDTO.getEstado())
+                .imagen(imageUrl)
                 .cliente(cliente)
                 .raza(raza)
                 .build();
@@ -115,6 +127,22 @@ public class PetServiceImpl implements PetService {
         if (petUpdateDTO.getFechaNacimiento() != null) pet.setFechaNacimiento(petUpdateDTO.getFechaNacimiento());
         if (petUpdateDTO.getSexo() != null) pet.setSexo(petUpdateDTO.getSexo());
         if (petUpdateDTO.getEstado() != null) pet.setEstado(petUpdateDTO.getEstado());
+
+        //  Actualizar imagen si viene una nueva
+        if (petUpdateDTO.getImagen() != null && !petUpdateDTO.getImagen().isEmpty()) {
+            log.info("Actualizando imagen de mascota con ID: {}", id);
+
+            // Eliminar imagen anterior si existe
+            if (pet.getImagen() != null && !pet.getImagen().isEmpty()) {
+                log.info("Eliminando imagen anterior de Cloudinary...");
+                cloudinaryService.deleteImageMascotas(pet.getImagen());
+            }
+
+            // Subir nueva imagen
+            String nuevaImagenUrl = cloudinaryService.uploadImageMascotas(petUpdateDTO.getImagen());
+            pet.setImagen(nuevaImagenUrl);
+            log.info(" Nueva imagen subida: {}", nuevaImagenUrl);
+        }
 
         if (petUpdateDTO.getIdCliente() != null) {
             Client cliente = clientRepository.findById(petUpdateDTO.getIdCliente())
@@ -135,11 +163,17 @@ public class PetServiceImpl implements PetService {
 
     @Override
     public void deletePet(Long id) {
-        if (!petRepository.existsById(id)) {
-            throw new EntityNotFoundException("Mascota no encontrada con id: " + id);
+        Pet pet = petRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Mascota no encontrada con id: " + id));
+
+        // ️ Eliminar imagen de Cloudinary antes de eliminar la mascota
+        if (pet.getImagen() != null && !pet.getImagen().isEmpty()) {
+            log.info("🗑️ Eliminando imagen de Cloudinary antes de eliminar mascota...");
+            cloudinaryService.deleteImageMascotas(pet.getImagen());
         }
+
         petRepository.deleteById(id);
-        log.info("Mascota eliminada con id: {}", id);
+        log.info(" Mascota eliminada con id: {}", id);
     }
 
     @Override
