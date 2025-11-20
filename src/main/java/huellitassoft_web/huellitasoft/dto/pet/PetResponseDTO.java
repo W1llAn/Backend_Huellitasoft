@@ -27,6 +27,8 @@ public class PetResponseDTO {
     private Long idRaza;
     private String nombreCliente;
     private String nombreRaza;
+    private String observaciones;
+    private Boolean eliminado;
     private String imagen;
     private Long idEspecie;
     private String nombreEspecie;
