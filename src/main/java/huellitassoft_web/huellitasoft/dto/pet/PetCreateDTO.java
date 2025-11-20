@@ -33,6 +33,10 @@ public class PetCreateDTO {
     @NotNull(message = "El estado es obligatorio")
     private Boolean estado;
 
+    private String observaciones;
+
+    private boolean eliminado;
+
     private String imagen;
 
     @NotNull(message = "El cliente es obligatorio")
