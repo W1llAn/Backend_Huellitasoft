@@ -60,6 +60,8 @@ public class PetServiceImpl implements PetService {
                 .nombreRaza(pet.getRaza().getNombre())
                 .clientResponseDTO(mapToResponseDTO(pet.getCliente()))
                 .idEspecie(pet.getRaza().getSpecie().getIdEspecie())
+                .observaciones(pet.getObservaciones())
+                .eliminado(pet.getEliminado())
                 .nombreEspecie(pet.getRaza().getSpecie().getNombre())
                 .imagen(pet.getImagen())
                 .build();
@@ -67,7 +69,7 @@ public class PetServiceImpl implements PetService {
 
     @Override
     public List<PetResponseDTO> getAllPet() {
-        return petRepository.findAll()
+        return petRepository.findByEliminadoFalse()
                 .stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
@@ -109,7 +111,9 @@ public class PetServiceImpl implements PetService {
                 .sexo(petCreateDTO.getSexo())
                 .estado(petCreateDTO.getEstado())
                 .imagen(imageUrl)
+                .observaciones(petCreateDTO.getObservaciones())
                 .cliente(cliente)
+                .eliminado(false)
                 .raza(raza)
                 .build();
 
@@ -127,7 +131,8 @@ public class PetServiceImpl implements PetService {
         if (petUpdateDTO.getFechaNacimiento() != null) pet.setFechaNacimiento(petUpdateDTO.getFechaNacimiento());
         if (petUpdateDTO.getSexo() != null) pet.setSexo(petUpdateDTO.getSexo());
         if (petUpdateDTO.getEstado() != null) pet.setEstado(petUpdateDTO.getEstado());
-
+        if (petUpdateDTO.getObservaciones() != null) pet.setObservaciones(petUpdateDTO.getObservaciones());
+        if(petUpdateDTO.getEliminado() != null) pet.setEliminado(petUpdateDTO.getEliminado());
         //  Actualizar imagen si viene una nueva
         if (petUpdateDTO.getImagen() != null && !petUpdateDTO.getImagen().isEmpty()) {
             log.info("Actualizando imagen de mascota con ID: {}", id);

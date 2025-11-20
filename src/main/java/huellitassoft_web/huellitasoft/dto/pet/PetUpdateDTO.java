@@ -29,6 +29,10 @@ public class PetUpdateDTO {
 
     private String imagen;
 
+    private String observaciones;
+
+    private Boolean eliminado;
+
     private Long idCliente;
 
     private Long idRaza;

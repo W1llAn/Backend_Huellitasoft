@@ -38,6 +38,12 @@ public class Pet {
     @Column(name = "imagen", columnDefinition = "TEXT")
     private String imagen;
 
+    @Column(name = "observaciones")
+    private String observaciones;
+
+    @Column(name = "eliminado")
+    private Boolean eliminado;
+
     // Relación con la entidad Cliente
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "id_cliente", nullable = false)

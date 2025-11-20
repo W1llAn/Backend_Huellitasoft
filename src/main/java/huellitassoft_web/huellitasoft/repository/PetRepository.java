@@ -26,4 +26,6 @@ public interface PetRepository extends JpaRepository<Pet, Long> {
 
     // Eliminar mascotas de un cliente específico
     void deleteByClienteIdCliente(Long idCliente);
+
+    List<Pet> findByEliminadoFalse();
 }
