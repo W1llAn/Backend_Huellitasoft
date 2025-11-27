@@ -111,9 +111,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, MASCOTAS_ENDPOINT).authenticated()
                         .requestMatchers(HttpMethod.GET, MASCOTAS_WILDCARD).authenticated()
                         // POST, PUT, DELETE solo para no-clientes (VETERINARIO, ADMINISTRADOR, ADMINISTRADOR_VETERINARIA)
-                        .requestMatchers(HttpMethod.POST, MASCOTAS_ENDPOINT).hasAnyRole(ROLE_VETERINARIO, ROLE_ADMIN, ROLE_ADMIN_VET)
-                        .requestMatchers(HttpMethod.PUT, MASCOTAS_WILDCARD).hasAnyRole(ROLE_VETERINARIO, ROLE_ADMIN, ROLE_ADMIN_VET)
-                        .requestMatchers(HttpMethod.DELETE, MASCOTAS_WILDCARD).hasAnyRole(ROLE_VETERINARIO, ROLE_ADMIN, ROLE_ADMIN_VET)
+                        .requestMatchers(HttpMethod.POST, MASCOTAS_ENDPOINT).authenticated()
+                        .requestMatchers(HttpMethod.PUT, MASCOTAS_WILDCARD).authenticated()
+                        .requestMatchers(HttpMethod.DELETE, MASCOTAS_WILDCARD).authenticated()
 
                         // Endpoints de CLIENTES - GET permitido para autenticados
                         .requestMatchers(HttpMethod.GET, CLIENTES_ENDPOINT).authenticated()
