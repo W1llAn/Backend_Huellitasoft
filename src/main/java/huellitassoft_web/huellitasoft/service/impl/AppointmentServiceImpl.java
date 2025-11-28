@@ -109,11 +109,6 @@ public class AppointmentServiceImpl implements AppointmentService {
             User nuevoUsuario = userRepository.findById(dto.getIdUsuario())
                     .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con ID: " + dto.getIdUsuario()));
 
-            if (!(nuevoUsuario.getRol().equals(UserRol.ROLE_VETERINARIO) ||
-                    nuevoUsuario.getRol().equals(UserRol.ROLE_ADMINISTRADOR_VETERINARIA))) {
-                throw new IllegalArgumentException("Solo usuarios con rol VETERINARIO o ADMINISTRADOR_VETERINARIA pueden asignarse a citas.");
-            }
-
             // Validar disponibilidad del nuevo veterinario
             if (dto.getFechaHora() != null) {
                 boolean existeCita = appointmentRepository.existsByUsuarioIdUsuarioAndFechaHora(nuevoUsuario.getIdUsuario(), dto.getFechaHora());
