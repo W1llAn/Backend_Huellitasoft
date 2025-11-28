@@ -20,10 +20,10 @@ import java.util.List;
 
 /**
  * Implementación del servicio de clientes.
- * 
+ * <p>
  * Gestiona la lógica de negocio para operaciones de clientes.
  * Incluye validaciones, transacciones y mapeo de DTOs.
- * 
+ *
  * @author Backend Team
  * @version 1.0
  */
@@ -216,7 +216,8 @@ public class ClientServiceImpl implements ClientService {
         }
 
         // Validar documento si cambió
-        if (!client.getDocumentoIdentidad().equals(clientCreateDTO.getDocumentoIdentidad())) {
+        if (client.getDocumentoIdentidad() == null ||
+                !client.getDocumentoIdentidad().equals(clientCreateDTO.getDocumentoIdentidad())) {
             if (clientRepository.existsByDocumentoIdentidad(clientCreateDTO.getDocumentoIdentidad())) {
                 log.warn("Intento de actualizar con documento duplicado: {}", clientCreateDTO.getDocumentoIdentidad());
                 throw new ResourceAlreadyExistsException(String.format(DOCUMENTO_DUPLICADO, clientCreateDTO.getDocumentoIdentidad()));

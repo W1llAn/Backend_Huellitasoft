@@ -120,7 +120,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, CLIENTES_WILDCARD).authenticated()
                         // POST, PUT, PATCH, DELETE solo para no-clientes (VETERINARIO, ADMINISTRADOR, ADMINISTRADOR_VETERINARIA)
                         .requestMatchers(HttpMethod.POST, CLIENTES_ENDPOINT).hasAnyRole(ROLE_VETERINARIO, ROLE_ADMIN, ROLE_ADMIN_VET)
-                        .requestMatchers(HttpMethod.PUT, CLIENTES_WILDCARD).hasAnyRole(ROLE_VETERINARIO, ROLE_ADMIN, ROLE_ADMIN_VET)
+                        .requestMatchers(HttpMethod.PUT, CLIENTES_WILDCARD).authenticated()
                         .requestMatchers(HttpMethod.PATCH, CLIENTES_WILDCARD).hasAnyRole(ROLE_VETERINARIO, ROLE_ADMIN, ROLE_ADMIN_VET)
                         .requestMatchers(HttpMethod.DELETE, CLIENTES_WILDCARD).hasAnyRole(ROLE_VETERINARIO, ROLE_ADMIN, ROLE_ADMIN_VET)
 
