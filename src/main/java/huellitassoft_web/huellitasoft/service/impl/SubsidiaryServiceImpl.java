@@ -18,8 +18,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.math.BigDecimal;
+import huellitassoft_web.huellitasoft.enums.DayOfWeek;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -29,6 +30,7 @@ public class SubsidiaryServiceImpl implements SubsidiaryService {
     private final SubsidiaryRepository subsidiaryRepository;
     private final SubsidiaryScheduleRepository scheduleRepository;
     private final UserRepository userRepository;
+    private final GeocodeService geocodeService;
 
     @Override
     @Transactional
@@ -97,17 +99,26 @@ public class SubsidiaryServiceImpl implements SubsidiaryService {
 
     private void updateSchedules(Subsidiary subsidiary, List<ScheduleRequestDTO> scheduleDTOs) {
         List<SubsidiarySchedule> existingSchedules = subsidiary.getSchedules();
+        if (existingSchedules == null) {
+            existingSchedules = new ArrayList<>();
+            subsidiary.setSchedules(existingSchedules);
+        }
 
-        var existingScheduleMap = existingSchedules.stream()
+        // Aquí asumimos que SubsidiarySchedule.getDayOfWeek() devuelve DayOfWeek
+        Map<DayOfWeek, SubsidiarySchedule> existingMap = existingSchedules.stream()
+                .filter(Objects::nonNull)
                 .collect(Collectors.toMap(
                         SubsidiarySchedule::getDayOfWeek,
-                        schedule -> schedule
+                        schedule -> schedule,
+                        (a, b) -> a // en caso de duplicados, conservar el primero
                 ));
 
         existingSchedules.clear();
 
         for (ScheduleRequestDTO scheduleDTO : scheduleDTOs) {
-            SubsidiarySchedule schedule = existingScheduleMap.get(scheduleDTO.getDayOfWeek());
+            // Se asume que ScheduleRequestDTO.getDayOfWeek() devuelve DayOfWeek
+            DayOfWeek key = scheduleDTO.getDayOfWeek();
+            SubsidiarySchedule schedule = existingMap.get(key);
 
             if (schedule != null) {
                 updateScheduleFields(schedule, scheduleDTO);
@@ -143,7 +154,6 @@ public class SubsidiaryServiceImpl implements SubsidiaryService {
     }
 
     private Subsidiary mapToEntity(SubsidiaryRequestDTO dto) {
-        // Validar que el usuario existe
         User manager = userRepository.findById(dto.getIdUsuario())
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con ID: " + dto.getIdUsuario()));
 
@@ -152,6 +162,7 @@ public class SubsidiaryServiceImpl implements SubsidiaryService {
         subsidiary.setAddress(dto.getAddress());
         subsidiary.setState(dto.getState());
         subsidiary.setManager(manager);
+
         return subsidiary;
     }
 
@@ -160,7 +171,6 @@ public class SubsidiaryServiceImpl implements SubsidiaryService {
         subsidiary.setAddress(dto.getAddress());
         subsidiary.setState(dto.getState());
 
-        // Actualizar usuario si se proporciona
         if (dto.getIdUsuario() != null) {
             User manager = userRepository.findById(dto.getIdUsuario())
                     .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con ID: " + dto.getIdUsuario()));
@@ -188,7 +198,19 @@ public class SubsidiaryServiceImpl implements SubsidiaryService {
         dto.setAddress(subsidiary.getAddress());
         dto.setState(subsidiary.getState());
 
-        // Incluir información del usuario gestor
+        // Geocodificar la dirección en el DTO
+        Map<String, BigDecimal> coordinates = geocodeService.geocodeAddress(subsidiary.getAddress());
+
+        if (coordinates != null) {
+            BigDecimal lat = coordinates.get("latitude");
+            BigDecimal lng = coordinates.get("longitude");
+            dto.setLatitude(lat != null ? lat.doubleValue() : null);
+            dto.setLongitude(lng != null ? lng.doubleValue() : null);
+        } else {
+            dto.setLatitude(null);
+            dto.setLongitude(null);
+        }
+
         if (subsidiary.getManager() != null) {
             dto.setIdUsuario(subsidiary.getManager().getIdUsuario());
             dto.setUsuarioUsername(subsidiary.getManager().getUsername());
@@ -221,7 +243,6 @@ public class SubsidiaryServiceImpl implements SubsidiaryService {
     @Override
     @Transactional(readOnly = true)
     public List<SubsidiaryResponseDTO> getSubsidiariesByManager(Long idUsuario) {
-        // Validar que el usuario existe
         if (!userRepository.existsById(idUsuario)) {
             throw new ResourceNotFoundException("Usuario no encontrado con ID: " + idUsuario);
         }
@@ -234,7 +255,6 @@ public class SubsidiaryServiceImpl implements SubsidiaryService {
     @Override
     @Transactional(readOnly = true)
     public List<SubsidiaryResponseDTO> getSubsidiariesByManagerAndState(Long idUsuario, SubsidiaryState state) {
-        // Validar que el usuario existe
         if (!userRepository.existsById(idUsuario)) {
             throw new ResourceNotFoundException("Usuario no encontrado con ID: " + idUsuario);
         }
