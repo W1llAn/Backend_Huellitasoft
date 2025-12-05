@@ -189,10 +189,10 @@ public class SecurityConfig {
                         // Vacunación de mascota PetVaccination
                         .requestMatchers(HttpMethod.POST, PET_VACC_ENDPOINT).hasRole(ROLE_VETERINARIO)
                         .requestMatchers(HttpMethod.DELETE, PET_VACC_WILDCARD).hasAnyRole(ROLE_VETERINARIO, ROLE_ADMIN, ROLE_ADMIN_VET)
-                        .requestMatchers(HttpMethod.GET, PET_VACC_WILDCARD).hasAnyRole(ROLE_VETERINARIO, ROLE_ADMIN, ROLE_ADMIN_VET)
+                        .requestMatchers(HttpMethod.GET, PET_VACC_WILDCARD).authenticated()
 
                         // Si se quiere permitir que el CLIENTE consulte las vacunaciones de su mascota:
-                        // .requestMatchers(HttpMethod.GET, "/api/vacunacion-mascota/mascota/**").hasAnyRole("VETERINARIO","ADMINISTRADOR","CLIENTE")
+                        //} .requestMatchers(HttpMethod.GET, "/api/vacunacion-mascota/mascota/**").hasAnyRole("VETERINARIO","ADMINISTRADOR","CLIENTE")
                         // Todos los demás requieren autenticación
                         .anyRequest().authenticated()
                 )
