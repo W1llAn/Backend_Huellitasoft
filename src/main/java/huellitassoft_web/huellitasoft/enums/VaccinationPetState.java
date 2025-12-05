@@ -1,4 +1,8 @@
 package huellitassoft_web.huellitasoft.enums;
 
-public enum VaccinationPetSatet {
+public enum VaccinationPetState {
+    ACTIVA,
+    COMPLETADA,
+    CANCELADA,
+    REPROGRAMADA
 }
