@@ -6,6 +6,7 @@ import huellitassoft_web.huellitasoft.entity.Pet;
 import huellitassoft_web.huellitasoft.entity.PetVaccination;
 import huellitassoft_web.huellitasoft.entity.User;
 import huellitassoft_web.huellitasoft.entity.Vaccine;
+import huellitassoft_web.huellitasoft.enums.VaccinationPetState;
 import huellitassoft_web.huellitasoft.exception.ResourceNotFoundException;
 import huellitassoft_web.huellitasoft.repository.PetRepository;
 import huellitassoft_web.huellitasoft.repository.PetVaccinationRepository;
@@ -71,6 +72,7 @@ public class PetVaccinationServiceImpl implements PetVaccinationService {
         PetVaccination pv = PetVaccination.builder()
                 .pet(pet)
                 .vaccine(vaccine)
+                .estado(dto.getEstado())
                 .user(user)
                 .fechaAplicada(LocalDateTime.now()) // backend controla fecha/hora
                 .build();
@@ -142,6 +144,7 @@ public class PetVaccinationServiceImpl implements PetVaccinationService {
                 .fechaAplicada(pv.getFechaAplicada())
                 .idUsuario(Long.valueOf(pv.getUser().getIdUsuario()))
                 .nombreUsuario(pv.getUser().getUsername())
+                .estado(pv.getEstado())
                 .build();
     }
 }

@@ -1,5 +1,6 @@
 package huellitassoft_web.huellitasoft.dto.petVaccination;
 
+import huellitassoft_web.huellitasoft.enums.VaccinationPetState;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -24,6 +25,9 @@ public class PetVaccinationResponseDTO {
     @Schema(description = "ID de la mascota vacunada", example = "10")
     private Long idMascota;
 
+    @Schema(description = "Estado de la vacunación", example = "ACTIVA")
+    private VaccinationPetState estado;
+
     @Schema(description = "Nombre de la mascota vacunada", example = "Rocky")
     private String nombreMascota;
 
@@ -44,4 +48,6 @@ public class PetVaccinationResponseDTO {
 
     @Schema(description = "Usuario/username del veterinario que aplicó la vacuna", example = "dr.gomez")
     private String nombreUsuario;
+
+
 }

@@ -1,5 +1,6 @@
 package huellitassoft_web.huellitasoft.dto.petVaccination;
 
+import huellitassoft_web.huellitasoft.enums.VaccinationPetState;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -23,4 +24,9 @@ public class PetVaccinationCreateDTO {
     @NotNull(message = "El ID de la vacuna es obligatorio")
     @Schema(description = "ID de la vacuna aplicada", example = "3", requiredMode = Schema.RequiredMode.REQUIRED)
     private Long idVacuna;
+
+    @NotNull(message = "El estado de la vacunación es obligatorio")
+    @Schema(description = "Estado de la vacunación", example = "ACTIVA", requiredMode = Schema.RequiredMode.REQUIRED)
+    private VaccinationPetState estado;
+
 }
