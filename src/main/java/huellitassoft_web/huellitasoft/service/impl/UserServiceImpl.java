@@ -105,7 +105,7 @@ public class UserServiceImpl implements UserService {
         String rawPassword = createDTO.getContrasena();
         String rolCliente = String.valueOf(createDTO.getRol());
 
-        //  SUBIR IMAGEN A CLOUDINARY SI VIENE EN EL DTO
+        // SUBIR IMAGEN A CLOUDINARY SI VIENE EN EL DTO
         String imageUrl = null;
         if (createDTO.getImagen() != null && !createDTO.getImagen().isEmpty()) {
             log.info(" Subiendo imagen de usuario a Cloudinary...");
@@ -120,12 +120,26 @@ public class UserServiceImpl implements UserService {
                 .rol(createDTO.getRol())
                 .estado(createDTO.getEstado())
                 .imagen(imageUrl) // GUARDAR URL DE CLOUDINARY
+                // Información Personal
+                .nombres(createDTO.getNombres())
+                .apellidos(createDTO.getApellidos())
+                .tipoDocumento(createDTO.getTipoDocumento())
+                .numeroDocumento(createDTO.getNumeroDocumento())
+                .telefono(createDTO.getTelefono())
+                .direccion(createDTO.getDireccion())
+                .fechaNacimiento(createDTO.getFechaNacimiento())
+                // Información Profesional
+                .especialidad(createDTO.getEspecialidad())
+                .numeroLicencia(createDTO.getNumeroLicencia())
+                .aniosExperiencia(createDTO.getAniosExperiencia())
+                .biografia(createDTO.getBiografia())
                 .build();
 
         // Si se proporciona creadoPorId, validar que el usuario exista
         if (createDTO.getCreadoPorId() != null) {
             User creadoPor = userRepository.findById(createDTO.getCreadoPorId())
-                    .orElseThrow(() -> new ResourceNotFoundException(USER_NOT_FOUND_BY_ID + createDTO.getCreadoPorId()));
+                    .orElseThrow(
+                            () -> new ResourceNotFoundException(USER_NOT_FOUND_BY_ID + createDTO.getCreadoPorId()));
             user.setCreadoPor(creadoPor);
             log.info("Usuario será creado por el usuario: {}", createDTO.getCreadoPorId());
         }
@@ -147,33 +161,35 @@ public class UserServiceImpl implements UserService {
                 if (savedUser.getEmail() != null && rawPassword != null) {
                     String asunto = "Creación de cuenta HuellitaSoft";
                     String titulo = "Cuenta creada exitosamente";
-                    String mensaje = String.format("""
-                            Estimado(a) %s,
-                            
-                            Nos complace informarle que su cuenta en el sistema de gestión veterinaria HuellitaSoft ha sido creada correctamente.
-                            
-                            A continuación, se detallan sus credenciales de acceso:
-                            
-                            • Usuario: %s
-                            • Contraseña temporal: %s
-                            
-                            Por motivos de seguridad, le recomendamos cambiar su contraseña al iniciar sesión por primera vez.
-                            
-                            Si usted no solicitó esta cuenta, por favor ignore este mensaje.
-                            
-                            Atentamente,
-                            El equipo de HuellitaSoft
-                            """, savedUser.getUsername(), savedUser.getUsername(), rawPassword);
+                    String mensaje = String.format(
+                            """
+                                    Estimado(a) %s,
+
+                                    Nos complace informarle que su cuenta en el sistema de gestión veterinaria HuellitaSoft ha sido creada correctamente.
+
+                                    A continuación, se detallan sus credenciales de acceso:
+
+                                    • Usuario: %s
+                                    • Contraseña temporal: %s
+
+                                    Por motivos de seguridad, le recomendamos cambiar su contraseña al iniciar sesión por primera vez.
+
+                                    Si usted no solicitó esta cuenta, por favor ignore este mensaje.
+
+                                    Atentamente,
+                                    El equipo de HuellitaSoft
+                                    """,
+                            savedUser.getUsername(), savedUser.getUsername(), rawPassword);
 
                     emailService.sendNotificationEmail(
                             savedUser.getEmail(),
                             titulo,
                             asunto,
-                            mensaje
-                    );
+                            mensaje);
                 }
             } catch (Exception e) {
-                log.error("❌ Error al enviar las credenciales al usuario {}: {}", savedUser.getIdUsuario(), e.getMessage());
+                log.error("❌ Error al enviar las credenciales al usuario {}: {}", savedUser.getIdUsuario(),
+                        e.getMessage());
             }
         }
 
@@ -211,15 +227,17 @@ public class UserServiceImpl implements UserService {
                 cloudinaryService.deleteImageUsuarios(user.getImagen());
             }
 
-            //Subir nueva imagen
+            // Subir nueva imagen
             String nuevaImagenUrl = cloudinaryService.uploadImageUsuarios(updateDTO.getImagen());
             user.setImagen(nuevaImagenUrl);
             log.info("Nueva imagen subida: {}", nuevaImagenUrl);
         }
 
         // Actualizar otros campos
-        if (updateDTO.getEmail() != null) user.setEmail(updateDTO.getEmail());
-        if (updateDTO.getUsername() != null) user.setUsername(updateDTO.getUsername());
+        if (updateDTO.getEmail() != null)
+            user.setEmail(updateDTO.getEmail());
+        if (updateDTO.getUsername() != null)
+            user.setUsername(updateDTO.getUsername());
 
         // Solo actualizar contraseña si se proporciona
         if (updateDTO.getContrasena() != null && !updateDTO.getContrasena().isBlank()) {
@@ -227,13 +245,42 @@ public class UserServiceImpl implements UserService {
             log.info("Contraseña del usuario actualizada");
         }
 
-        if (updateDTO.getRol() != null) user.setRol(updateDTO.getRol());
-        if (updateDTO.getEstado() != null) user.setEstado(updateDTO.getEstado());
+        if (updateDTO.getRol() != null)
+            user.setRol(updateDTO.getRol());
+        if (updateDTO.getEstado() != null)
+            user.setEstado(updateDTO.getEstado());
+
+        // Actualizar información personal
+        if (updateDTO.getNombres() != null)
+            user.setNombres(updateDTO.getNombres());
+        if (updateDTO.getApellidos() != null)
+            user.setApellidos(updateDTO.getApellidos());
+        if (updateDTO.getTipoDocumento() != null)
+            user.setTipoDocumento(updateDTO.getTipoDocumento());
+        if (updateDTO.getNumeroDocumento() != null)
+            user.setNumeroDocumento(updateDTO.getNumeroDocumento());
+        if (updateDTO.getTelefono() != null)
+            user.setTelefono(updateDTO.getTelefono());
+        if (updateDTO.getDireccion() != null)
+            user.setDireccion(updateDTO.getDireccion());
+        if (updateDTO.getFechaNacimiento() != null)
+            user.setFechaNacimiento(updateDTO.getFechaNacimiento());
+
+        // Actualizar información profesional
+        if (updateDTO.getEspecialidad() != null)
+            user.setEspecialidad(updateDTO.getEspecialidad());
+        if (updateDTO.getNumeroLicencia() != null)
+            user.setNumeroLicencia(updateDTO.getNumeroLicencia());
+        if (updateDTO.getAniosExperiencia() != null)
+            user.setAniosExperiencia(updateDTO.getAniosExperiencia());
+        if (updateDTO.getBiografia() != null)
+            user.setBiografia(updateDTO.getBiografia());
 
         // Actualizar creadoPor si se proporciona
         if (updateDTO.getCreadoPorId() != null) {
             User creadoPor = userRepository.findById(updateDTO.getCreadoPorId())
-                    .orElseThrow(() -> new ResourceNotFoundException(USER_NOT_FOUND_BY_ID + updateDTO.getCreadoPorId()));
+                    .orElseThrow(
+                            () -> new ResourceNotFoundException(USER_NOT_FOUND_BY_ID + updateDTO.getCreadoPorId()));
             user.setCreadoPor(creadoPor);
         }
 
@@ -257,7 +304,7 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findById(idUsuario)
                 .orElseThrow(() -> new ResourceNotFoundException(USER_NOT_FOUND_BY_ID + idUsuario));
 
-        //  ELIMINAR IMAGEN DE CLOUDINARY ANTES DE ELIMINAR EL USUARIO
+        // ELIMINAR IMAGEN DE CLOUDINARY ANTES DE ELIMINAR EL USUARIO
         if (user.getImagen() != null && !user.getImagen().isEmpty()) {
             log.info("Eliminando imagen de Cloudinary antes de eliminar usuario...");
             cloudinaryService.deleteImageUsuarios(user.getImagen());
@@ -289,6 +336,19 @@ public class UserServiceImpl implements UserService {
                 .estado(user.getEstado())
                 .imagen(user.getImagen()) // ← INCLUIR URL DE IMAGEN
                 .fechaCreacion(user.getFechaCreacion())
+                // Información Personal
+                .nombres(user.getNombres())
+                .apellidos(user.getApellidos())
+                .tipoDocumento(user.getTipoDocumento())
+                .numeroDocumento(user.getNumeroDocumento())
+                .telefono(user.getTelefono())
+                .direccion(user.getDireccion())
+                .fechaNacimiento(user.getFechaNacimiento())
+                // Información Profesional
+                .especialidad(user.getEspecialidad())
+                .numeroLicencia(user.getNumeroLicencia())
+                .aniosExperiencia(user.getAniosExperiencia())
+                .biografia(user.getBiografia())
                 .build();
 
         if (user.getCreadoPor() != null) {

@@ -7,6 +7,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 /**
@@ -29,4 +30,19 @@ public class UserResponseDTO {
     private Long idSucursal;
     private String sucursalNombre;
     private String imagen;
+
+    // Información Personal
+    private String nombres;
+    private String apellidos;
+    private String tipoDocumento;
+    private String numeroDocumento;
+    private String telefono;
+    private String direccion;
+    private LocalDate fechaNacimiento;
+
+    // Información Profesional
+    private String especialidad;
+    private String numeroLicencia;
+    private Integer aniosExperiencia;
+    private String biografia;
 }
