@@ -11,6 +11,8 @@ import huellitassoft_web.huellitasoft.enums.UserRol;
 import huellitassoft_web.huellitasoft.enums.UserState;
 import org.w3c.dom.Text;
 
+import java.time.LocalDate;
+
 /**
  * DTO para actualizar un usuario.
  * Se utiliza en los endpoints PUT.
@@ -40,6 +42,43 @@ public class UserUpdateDTO {
     private UserState estado;
 
     private String imagen;
+
+    // Información Personal
+    @Size(max = 100, message = "Los nombres no pueden exceder 100 caracteres")
+    private String nombres;
+
+    @Size(max = 100, message = "Los apellidos no pueden exceder 100 caracteres")
+    private String apellidos;
+
+    @Size(max = 10, message = "El tipo de documento no puede exceder 10 caracteres")
+    private String tipoDocumento;
+
+    @Size(max = 20, message = "El número de documento no puede exceder 20 caracteres")
+    private String numeroDocumento;
+
+    @Pattern(regexp = "^[0-9+\\-\\s()]*$", message = "El teléfono debe contener solo números y caracteres válidos")
+    @Size(max = 20, message = "El teléfono no puede exceder 20 caracteres")
+    private String telefono;
+
+    @Size(max = 255, message = "La dirección no puede exceder 255 caracteres")
+    private String direccion;
+
+    @Past(message = "La fecha de nacimiento debe ser en el pasado")
+    private LocalDate fechaNacimiento;
+
+    // Información Profesional
+    @Size(max = 100, message = "La especialidad no puede exceder 100 caracteres")
+    private String especialidad;
+
+    @Size(max = 50, message = "El número de licencia no puede exceder 50 caracteres")
+    private String numeroLicencia;
+
+    @Min(value = 0, message = "Los años de experiencia no pueden ser negativos")
+    @Max(value = 70, message = "Los años de experiencia no pueden exceder 70")
+    private Integer aniosExperiencia;
+
+    @Size(max = 5000, message = "La biografía no puede exceder 5000 caracteres")
+    private String biografia;
 
     private Long creadoPorId;
 

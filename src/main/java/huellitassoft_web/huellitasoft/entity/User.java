@@ -9,6 +9,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.w3c.dom.Text;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
@@ -48,6 +49,41 @@ public class User {
 
     @Column(name = "imagen", columnDefinition = "TEXT")
     private String imagen;
+
+    // Información Personal
+    @Column
+    private String nombres;
+
+    @Column
+    private String apellidos;
+
+    @Column(name = "tipo_documento")
+    private String tipoDocumento;
+
+    @Column(name = "numero_documento", unique = true)
+    private String numeroDocumento;
+
+    @Column(length = 20)
+    private String telefono;
+
+    @Column(length = 255)
+    private String direccion;
+
+    @Column(name = "fecha_nacimiento")
+    private LocalDate fechaNacimiento;
+
+    // Información Profesional
+    @Column(length = 100)
+    private String especialidad;
+
+    @Column(name = "numero_licencia", length = 50)
+    private String numeroLicencia;
+
+    @Column(name = "anios_experiencia")
+    private Integer aniosExperiencia;
+
+    @Column(columnDefinition = "TEXT")
+    private String biografia;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = true)
     @JoinColumn(name = "creado_por", nullable = true)
